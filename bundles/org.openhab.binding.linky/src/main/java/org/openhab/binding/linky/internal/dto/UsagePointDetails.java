@@ -14,20 +14,25 @@ package org.openhab.binding.linky.internal.dto;
 
 import org.eclipse.jetty.jaas.spi.UserInfo;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
- * The {@link UserInfo} holds ids of existing Prms
+ * The {@link UserInfo} holds informations about energy delivery point
  *
  * @author Gaël L'hopital - Initial contribution
  * @author Laurent Arnal - Rewrite addon to use official dataconect API
  */
 
-public class PrmInfo {
-    public String prmId;
-    public String customerId;
+public class UsagePointDetails {
+    @SerializedName("usage_point_id")
+    public String usagePointId;
 
-    public Contracts contractInfo;
-    public UsagePointDetails usagePointInfo;
-    public ContactInfo contactInfo;
-    public AddressInfo addressInfo;
-    public IdentityInfo identityInfo;
+    @SerializedName("usage_point_status")
+    public String usagePointStatus;
+
+    @SerializedName("meter_type")
+    public String meterType;
+
+    @SerializedName("usage_point_addresses")
+    public AddressInfo usagePointAddresses;
 }

@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.openhab.binding.linky.internal.LinkyBindingConstants;
 import org.openhab.binding.linky.internal.LinkyConfiguration;
 import org.openhab.binding.linky.internal.LinkyException;
 import org.openhab.binding.linky.internal.api.EnedisHttpApi;
@@ -37,7 +38,8 @@ import org.openhab.binding.linky.internal.dto.ConsumptionReport.Aggregate;
 import org.openhab.binding.linky.internal.dto.ConsumptionReport.Consumption;
 import org.openhab.binding.linky.internal.dto.PrmDetail;
 import org.openhab.binding.linky.internal.dto.PrmInfo;
-import org.openhab.binding.linky.internal.dto.UserInfo;
+import org.openhab.core.auth.client.oauth2.OAuthClientService;
+import org.openhab.core.auth.client.oauth2.OAuthFactory;
 import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.QuantityType;
@@ -61,6 +63,7 @@ import com.google.gson.Gson;
  * sent to one of the channels.
  *
  * @author Gaël L'hopital - Initial contribution
+ * @author Laurent Arnal - Rewrite addon to use official dataconect API
  */
 
 @NonNullByDefault
@@ -81,6 +84,8 @@ public class LinkyHandler extends BaseThingHandler {
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable EnedisHttpApi enedisApi;
 
+    private final OAuthFactory oAuthFactory;
+
     private @NonNullByDefault({}) String prmId;
     private @NonNullByDefault({}) String userId;
 
@@ -90,7 +95,10 @@ public class LinkyHandler extends BaseThingHandler {
         ALL
     }
 
-    public LinkyHandler(Thing thing, LocaleProvider localeProvider, Gson gson, HttpClient httpClient) {
+    private @Nullable OAuthClientService oAuthService;
+
+    public LinkyHandler(Thing thing, LocaleProvider localeProvider, Gson gson, HttpClient httpClient,
+            OAuthFactory oAuthFactory) {
         super(thing);
         this.gson = gson;
         this.httpClient = httpClient;
@@ -106,6 +114,8 @@ public class LinkyHandler extends BaseThingHandler {
             }
             return consumption;
         });
+
+        this.oAuthFactory = oAuthFactory;
 
         this.cachedPowerData = new ExpiringDayCache<>("power cache", REFRESH_FIRST_HOUR_OF_DAY, () -> {
             // We request data for yesterday and the day before yesterday, even if the data for the day before yesterday
@@ -152,6 +162,11 @@ public class LinkyHandler extends BaseThingHandler {
 
         LinkyConfiguration config = getConfigAs(LinkyConfiguration.class);
         if (config.seemsValid()) {
+
+            OAuthClientService oAuthService = oAuthFactory.createOAuthClientService(thing.getUID().getAsString(),
+                    LinkyBindingConstants.LINKY_API_TOKEN_URL, LinkyBindingConstants.LINKY_AUTHORIZE_URL, "clientId",
+                    "clientSecret", LinkyBindingConstants.LINKY_SCOPES, true);
+
             enedisApi = new EnedisHttpApi(config, gson, httpClient);
             scheduler.submit(() -> {
                 try {
@@ -159,15 +174,9 @@ public class LinkyHandler extends BaseThingHandler {
                     api.initialize();
                     updateStatus(ThingStatus.ONLINE);
 
-                    if (thing.getProperties().isEmpty()) {
-                        UserInfo userInfo = api.getUserInfo();
-                        PrmInfo prmInfo = api.getPrmInfo(userInfo.userProperties.internId);
-                        PrmDetail details = api.getPrmDetails(userInfo.userProperties.internId, prmInfo.idPrm);
-                        updateProperties(Map.of(USER_ID, userInfo.userProperties.internId, PUISSANCE,
-                                details.situationContractuelleDtos[0].structureTarifaire().puissanceSouscrite().valeur()
-                                        + " kVA",
-                                PRM_ID, prmInfo.idPrm));
-                    }
+                    PrmInfo prmInfo = api.getPrmInfo();
+                    updateProperties(Map.of(USER_ID, prmInfo.customerId, PUISSANCE,
+                            prmInfo.contractInfo.subscribedPower, PRM_ID, prmInfo.prmId));
 
                     prmId = thing.getProperties().get(PRM_ID);
                     userId = thing.getProperties().get(USER_ID);
@@ -544,4 +553,5 @@ public class LinkyHandler extends BaseThingHandler {
                     aggregate.datas.get(index));
         }
     }
+
 }
