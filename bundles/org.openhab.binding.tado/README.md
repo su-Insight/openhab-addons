@@ -5,10 +5,13 @@ The tado° binding integrates devices from [tado°](https://www.tado.com).
 It requires a fully functional tado° installation.
 You can then monitor and control all zone types (Heating, AC, Hot Water) as well as retrieve the HOME/AWAY status of mobile devices, and setting the HOME/AWAY status of your home.
 
+**WARNING**: This binding doesn't work together with new tado X radiator thermostats, as they are using a different API (see [here](https://app.swaggerhub.com/apis/JPlenert/TadoX/0.8.0) ).
+
 ## `home` Thing (the Bridge)
 
-The binding supports discovery, but a `home` thing type has to be configured first.
-It serves as bridge to the tado° cloud services.
+The `home` thing serves as bridge to the tado° cloud services.
+The binding will automatically discover this thing and place it in the Inbox.
+It has to be manually configured with its `username` and `password` before it will actually go onlime.
 
 Parameter | Required | Description
 -|-|-
@@ -21,7 +24,7 @@ Example `tado.things`
 Bridge tado:home:demo [ username="mail@example.com", password="secret" ]
 ```
 
-Afterwards the discovery will show all zones and mobile devices associated with the user's home.
+Once the `home` thing is online, the binding will discover all its respective zones and mobile devices, and place them in the Inbox.
 
 ### Channels
 
@@ -78,7 +81,8 @@ Name | Type | Description | Read/Write | Zone type
 `verticalSwing`<sup>2)</sup> | String | Vertical swing state, one of <sup>3)</sup> `OFF`, `ON`, `UP`, `MID_UP`, `MID`, `MID_DOWN`, `DOWN`, `AUTO` | RW | `AC`
 `horizontalSwing`<sup>2)</sup> | String | Horizontal swing state, one of <sup>3)</sup> `OFF`, `ON`, `LEFT`, `MID_LEFT`, `MID`, `MID_RIGHT`, `RIGHT`, `AUTO` | RW | `AC`
 `batteryLowAlarm` | Switch | A control device in the Zone has a low battery | R | Any Zone
-`openWindowDetected` | Switch | An open window has been detected in the Zone | R | Any Zone
+`openWindowDetected` | Switch | An open window has been detected in the Zone | R | `HEATING`, `AC`
+`openWindowRemainingTime` | Number:Time | The remaining Open Window heating/cooling Override time in the Zone | R | `HEATING`, `AC`
 `light` | Switch | State (`ON`, `OFF`) of the control panel light | RW | `AC`
 
 You will see some of the above mentioned Channels only if your tado° device supports the respective function.
