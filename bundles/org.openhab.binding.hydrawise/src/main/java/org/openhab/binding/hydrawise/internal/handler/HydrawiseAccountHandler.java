@@ -69,7 +69,7 @@ public class HydrawiseAccountHandler extends BaseBridgeHandler implements Access
     private static final String CLIENT_ID = "hydrawise_app";
     private static final String SCOPE = "all";
     private final List<HydrawiseControllerListener> controllerListeners = Collections
-            .synchronizedList(new ArrayList<HydrawiseControllerListener>());
+            .synchronizedList(new ArrayList<>());
     private final HttpClient httpClient;
     private final OAuthFactory oAuthFactory;
     private @Nullable OAuthClientService oAuthService;
@@ -198,7 +198,7 @@ public class HydrawiseAccountHandler extends BaseBridgeHandler implements Access
                 OAuthClientService oAuthService = this.oAuthService;
                 if (oAuthService != null) {
                     oAuthService.refreshToken();
-                    initPolling(0, MIN_REFRESH_SECONDS);
+                    initPolling(0, refresh);
                 }
             } catch (OAuthException | IOException | OAuthResponseException e) {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getMessage());
