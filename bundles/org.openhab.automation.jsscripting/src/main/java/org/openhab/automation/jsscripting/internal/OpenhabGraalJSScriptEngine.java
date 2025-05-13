@@ -134,8 +134,8 @@ public class OpenhabGraalJSScriptEngine
     private final JSRuntimeFeatures jsRuntimeFeatures;
 
     // these fields start as null because they are populated on first use
-    private @Nullable String engineIdentifier;
     private @Nullable Consumer<String> scriptDependencyListener;
+    private String engineIdentifier; // this field is very helpful for debugging, please do not remove it
 
     private boolean initialized = false;
     private final boolean injectionEnabled;
@@ -243,7 +243,7 @@ public class OpenhabGraalJSScriptEngine
         if (localEngineIdentifier == null) {
             throw new IllegalStateException("Failed to retrieve engine identifier from engine bindings");
         }
-        engineIdentifier = localEngineIdentifier;
+        this.engineIdentifier = localEngineIdentifier;
 
         ScriptExtensionAccessor scriptExtensionAccessor = (ScriptExtensionAccessor) ctx
                 .getAttribute(CONTEXT_KEY_EXTENSION_ACCESSOR);
@@ -251,12 +251,13 @@ public class OpenhabGraalJSScriptEngine
             throw new IllegalStateException("Failed to retrieve script extension accessor from engine bindings");
         }
 
-        scriptDependencyListener = (Consumer<String>) ctx
-                .getAttribute("oh.dependency-listener"/* CONTEXT_KEY_DEPENDENCY_LISTENER */);
-        if (scriptDependencyListener == null) {
+        Consumer<String> localScriptDependencyListener = (Consumer<String>) ctx
+                .getAttribute(CONTEXT_KEY_DEPENDENCY_LISTENER);
+        if (localScriptDependencyListener == null) {
             LOGGER.warn(
                     "Failed to retrieve script script dependency listener from engine bindings. Script dependency tracking will be disabled.");
         }
+        scriptDependencyListener = localScriptDependencyListener;
 
         ScriptExtensionModuleProvider scriptExtensionModuleProvider = new ScriptExtensionModuleProvider(
                 scriptExtensionAccessor, lock);
@@ -317,7 +318,7 @@ public class OpenhabGraalJSScriptEngine
      * @param path a root path
      * @return whether the given path is a node root directory
      */
-    private boolean isRootNodePath(Path path) {
+    private static boolean isRootNodePath(Path path) {
         return path.startsWith(path.getRoot().resolve(NODE_DIR));
     }
 
@@ -328,7 +329,7 @@ public class OpenhabGraalJSScriptEngine
      * @param path a root path, e.g. C:\node_modules\foo.js
      * @return the class resource path for loading local modules
      */
-    private String nodeFileToResource(Path path) {
+    private static String nodeFileToResource(Path path) {
         return "/" + path.subpath(0, path.getNameCount()).toString().replace('\\', '/');
     }
 
