@@ -19,12 +19,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
@@ -35,28 +37,29 @@ import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.hue.internal.action.DynamicsActions;
+import org.openhab.binding.hue.internal.api.dto.clip2.Alerts;
+import org.openhab.binding.hue.internal.api.dto.clip2.ColorXy;
+import org.openhab.binding.hue.internal.api.dto.clip2.Dimming;
+import org.openhab.binding.hue.internal.api.dto.clip2.Effects;
+import org.openhab.binding.hue.internal.api.dto.clip2.Gamut2;
+import org.openhab.binding.hue.internal.api.dto.clip2.MetaData;
+import org.openhab.binding.hue.internal.api.dto.clip2.MirekSchema;
+import org.openhab.binding.hue.internal.api.dto.clip2.ProductData;
+import org.openhab.binding.hue.internal.api.dto.clip2.Resource;
+import org.openhab.binding.hue.internal.api.dto.clip2.ResourceReference;
+import org.openhab.binding.hue.internal.api.dto.clip2.Resources;
+import org.openhab.binding.hue.internal.api.dto.clip2.TimedEffects;
+import org.openhab.binding.hue.internal.api.dto.clip2.enums.ActionType;
+import org.openhab.binding.hue.internal.api.dto.clip2.enums.EffectType;
+import org.openhab.binding.hue.internal.api.dto.clip2.enums.ResourceType;
+import org.openhab.binding.hue.internal.api.dto.clip2.enums.SceneRecallAction;
+import org.openhab.binding.hue.internal.api.dto.clip2.enums.SmartSceneRecallAction;
+import org.openhab.binding.hue.internal.api.dto.clip2.enums.ZigbeeStatus;
+import org.openhab.binding.hue.internal.api.dto.clip2.helper.Setters;
 import org.openhab.binding.hue.internal.config.Clip2ThingConfig;
-import org.openhab.binding.hue.internal.dto.clip2.Alerts;
-import org.openhab.binding.hue.internal.dto.clip2.ColorXy;
-import org.openhab.binding.hue.internal.dto.clip2.Dimming;
-import org.openhab.binding.hue.internal.dto.clip2.Effects;
-import org.openhab.binding.hue.internal.dto.clip2.Gamut2;
-import org.openhab.binding.hue.internal.dto.clip2.MetaData;
-import org.openhab.binding.hue.internal.dto.clip2.MirekSchema;
-import org.openhab.binding.hue.internal.dto.clip2.ProductData;
-import org.openhab.binding.hue.internal.dto.clip2.Resource;
-import org.openhab.binding.hue.internal.dto.clip2.ResourceReference;
-import org.openhab.binding.hue.internal.dto.clip2.Resources;
-import org.openhab.binding.hue.internal.dto.clip2.TimedEffects;
-import org.openhab.binding.hue.internal.dto.clip2.enums.ActionType;
-import org.openhab.binding.hue.internal.dto.clip2.enums.EffectType;
-import org.openhab.binding.hue.internal.dto.clip2.enums.ResourceType;
-import org.openhab.binding.hue.internal.dto.clip2.enums.SceneRecallAction;
-import org.openhab.binding.hue.internal.dto.clip2.enums.SmartSceneRecallAction;
-import org.openhab.binding.hue.internal.dto.clip2.enums.ZigbeeStatus;
-import org.openhab.binding.hue.internal.dto.clip2.helper.Setters;
 import org.openhab.binding.hue.internal.exceptions.ApiException;
 import org.openhab.binding.hue.internal.exceptions.AssetNotLoadedException;
+import org.openhab.core.i18n.TimeZoneProvider;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.HSBType;
@@ -160,11 +163,13 @@ public class Clip2ThingHandler extends BaseThingHandler {
     private final ThingRegistry thingRegistry;
     private final ItemChannelLinkRegistry itemChannelLinkRegistry;
     private final Clip2StateDescriptionProvider stateDescriptionProvider;
+    private final TimeZoneProvider timeZoneProvider;
 
     private String resourceId = "?";
     private Resource thisResource;
     private Duration dynamicsDuration = Duration.ZERO;
     private Instant dynamicsExpireTime = Instant.MIN;
+    private Instant buttonGroupLastUpdated = Instant.MIN;
 
     private boolean disposing;
     private boolean hasConnectivityIssue;
@@ -180,7 +185,8 @@ public class Clip2ThingHandler extends BaseThingHandler {
     private @Nullable Future<?> updateServiceContributorsTask;
 
     public Clip2ThingHandler(Thing thing, Clip2StateDescriptionProvider stateDescriptionProvider,
-            ThingRegistry thingRegistry, ItemChannelLinkRegistry itemChannelLinkRegistry) {
+            TimeZoneProvider timeZoneProvider, ThingRegistry thingRegistry,
+            ItemChannelLinkRegistry itemChannelLinkRegistry) {
         super(thing);
 
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
@@ -197,6 +203,7 @@ public class Clip2ThingHandler extends BaseThingHandler {
         this.thingRegistry = thingRegistry;
         this.itemChannelLinkRegistry = itemChannelLinkRegistry;
         this.stateDescriptionProvider = stateDescriptionProvider;
+        this.timeZoneProvider = timeZoneProvider;
     }
 
     /**
@@ -428,6 +435,10 @@ public class Clip2ThingHandler extends BaseThingHandler {
                 putResource = new Resource(ResourceType.LIGHT_LEVEL).setEnabled(command);
                 break;
 
+            case CHANNEL_2_SECURITY_CONTACT_ENABLED:
+                putResource = new Resource(ResourceType.CONTACT).setEnabled(command);
+                break;
+
             case CHANNEL_2_SCENE:
                 if (command instanceof StringType) {
                     Resource scene = sceneResourceEntries.get(((StringType) command).toString());
@@ -626,44 +637,51 @@ public class Clip2ThingHandler extends BaseThingHandler {
      * @param resource a Resource object containing the new state.
      */
     public void onResource(Resource resource) {
-        if (!disposing) {
-            boolean resourceConsumed = false;
-            String incomingResourceId = resource.getId();
-            if (resourceId.equals(incomingResourceId)) {
-                if (resource.hasFullState()) {
-                    thisResource = resource;
-                    if (!updatePropertiesDone) {
-                        updateProperties(resource);
-                        resourceConsumed = updatePropertiesDone;
-                    }
-                }
-                if (!updateDependenciesDone) {
-                    resourceConsumed = true;
-                    cancelTask(updateDependenciesTask, false);
-                    updateDependenciesTask = scheduler.submit(() -> updateDependencies());
-                }
-            } else if (SUPPORTED_SCENE_TYPES.contains(resource.getType())) {
-                Resource cachedScene = sceneContributorsCache.get(incomingResourceId);
-                if (Objects.nonNull(cachedScene)) {
-                    Setters.setResource(resource, cachedScene);
-                    resourceConsumed = updateChannels(resource);
-                    sceneContributorsCache.put(incomingResourceId, resource);
-                }
-            } else {
-                Resource cachedService = serviceContributorsCache.get(incomingResourceId);
-                if (Objects.nonNull(cachedService)) {
-                    Setters.setResource(resource, cachedService);
-                    resourceConsumed = updateChannels(resource);
-                    serviceContributorsCache.put(incomingResourceId, resource);
-                    if (ResourceType.LIGHT == resource.getType() && !updateLightPropertiesDone) {
-                        updateLightProperties(resource);
-                    }
+        if (disposing) {
+            return;
+        }
+        boolean resourceConsumed = false;
+        if (resourceId.equals(resource.getId())) {
+            if (resource.hasFullState()) {
+                thisResource = resource;
+                if (!updatePropertiesDone) {
+                    updateProperties(resource);
+                    resourceConsumed = updatePropertiesDone;
                 }
             }
-            if (resourceConsumed) {
-                logger.debug("{} -> onResource() consumed resource {}", resourceId, resource);
+            if (!updateDependenciesDone) {
+                resourceConsumed = true;
+                cancelTask(updateDependenciesTask, false);
+                updateDependenciesTask = scheduler.submit(() -> updateDependencies());
+            }
+        } else {
+            Resource cachedResource = getResourceFromCache(resource);
+            if (cachedResource != null) {
+                Setters.setResource(resource, cachedResource);
+                resourceConsumed = updateChannels(resource);
+                putResourceToCache(resource);
+                if (ResourceType.LIGHT == resource.getType() && !updateLightPropertiesDone) {
+                    updateLightProperties(resource);
+                }
             }
         }
+        if (resourceConsumed) {
+            logger.debug("{} -> onResource() consumed resource {}", resourceId, resource);
+        }
+    }
+
+    private void putResourceToCache(Resource resource) {
+        if (SUPPORTED_SCENE_TYPES.contains(resource.getType())) {
+            sceneContributorsCache.put(resource.getId(), resource);
+        } else {
+            serviceContributorsCache.put(resource.getId(), resource);
+        }
+    }
+
+    private @Nullable Resource getResourceFromCache(Resource resource) {
+        return SUPPORTED_SCENE_TYPES.contains(resource.getType()) //
+                ? sceneContributorsCache.get(resource.getId())
+                : serviceContributorsCache.get(resource.getId());
     }
 
     /**
@@ -829,10 +847,22 @@ public class Clip2ThingHandler extends BaseThingHandler {
             case BUTTON:
                 if (fullUpdate) {
                     addSupportedChannel(CHANNEL_2_BUTTON_LAST_EVENT);
+                    addSupportedChannel(CHANNEL_2_BUTTON_LAST_UPDATED);
                     controlIds.put(resource.getId(), resource.getControlId());
                 } else {
                     State buttonState = resource.getButtonEventState(controlIds);
                     updateState(CHANNEL_2_BUTTON_LAST_EVENT, buttonState, fullUpdate);
+                }
+                // Update channel from timestamp if last button pressed.
+                State buttonLastUpdatedState = resource.getButtonLastUpdatedState(timeZoneProvider.getTimeZone());
+                if (buttonLastUpdatedState instanceof DateTimeType) {
+                    Instant buttonLastUpdatedInstant = ((DateTimeType) buttonLastUpdatedState).getInstant();
+                    if (buttonLastUpdatedInstant.isAfter(buttonGroupLastUpdated)) {
+                        updateState(CHANNEL_2_BUTTON_LAST_UPDATED, buttonLastUpdatedState, fullUpdate);
+                        buttonGroupLastUpdated = buttonLastUpdatedInstant;
+                    }
+                } else if (Instant.MIN.equals(buttonGroupLastUpdated)) {
+                    updateState(CHANNEL_2_BUTTON_LAST_UPDATED, buttonLastUpdatedState, fullUpdate);
                 }
                 break;
 
@@ -865,24 +895,34 @@ public class Clip2ThingHandler extends BaseThingHandler {
 
             case LIGHT_LEVEL:
                 updateState(CHANNEL_2_LIGHT_LEVEL, resource.getLightLevelState(), fullUpdate);
+                updateState(CHANNEL_2_LIGHT_LEVEL_LAST_UPDATED,
+                        resource.getLightLevelLastUpdatedState(timeZoneProvider.getTimeZone()), fullUpdate);
                 updateState(CHANNEL_2_LIGHT_LEVEL_ENABLED, resource.getEnabledState(), fullUpdate);
                 break;
 
             case MOTION:
+            case CAMERA_MOTION:
                 updateState(CHANNEL_2_MOTION, resource.getMotionState(), fullUpdate);
+                updateState(CHANNEL_2_MOTION_LAST_UPDATED,
+                        resource.getMotionLastUpdatedState(timeZoneProvider.getTimeZone()), fullUpdate);
                 updateState(CHANNEL_2_MOTION_ENABLED, resource.getEnabledState(), fullUpdate);
                 break;
 
             case RELATIVE_ROTARY:
                 if (fullUpdate) {
                     addSupportedChannel(CHANNEL_2_ROTARY_STEPS);
+                    addSupportedChannel(CHANNEL_2_ROTARY_STEPS_LAST_UPDATED);
                 } else {
                     updateState(CHANNEL_2_ROTARY_STEPS, resource.getRotaryStepsState(), fullUpdate);
                 }
+                updateState(CHANNEL_2_ROTARY_STEPS_LAST_UPDATED,
+                        resource.getRotaryStepsLastUpdatedState(timeZoneProvider.getTimeZone()), fullUpdate);
                 break;
 
             case TEMPERATURE:
                 updateState(CHANNEL_2_TEMPERATURE, resource.getTemperatureState(), fullUpdate);
+                updateState(CHANNEL_2_TEMPERATURE_LAST_UPDATED,
+                        resource.getTemperatureLastUpdatedState(timeZoneProvider.getTimeZone()), fullUpdate);
                 updateState(CHANNEL_2_TEMPERATURE_ENABLED, resource.getEnabledState(), fullUpdate);
                 break;
 
@@ -892,6 +932,19 @@ public class Clip2ThingHandler extends BaseThingHandler {
 
             case SCENE:
                 updateState(CHANNEL_2_SCENE, resource.getSceneState(), fullUpdate);
+                break;
+
+            case CONTACT:
+                updateState(CHANNEL_2_SECURITY_CONTACT, resource.getContactState(), fullUpdate);
+                updateState(CHANNEL_2_SECURITY_CONTACT_LAST_UPDATED,
+                        resource.getContactLastUpdatedState(timeZoneProvider.getTimeZone()), fullUpdate);
+                updateState(CHANNEL_2_SECURITY_CONTACT_ENABLED, resource.getEnabledState(), fullUpdate);
+                break;
+
+            case TAMPER:
+                updateState(CHANNEL_2_SECURITY_TAMPER, resource.getTamperState(), fullUpdate);
+                updateState(CHANNEL_2_SECURITY_TAMPER_LAST_UPDATED,
+                        resource.getTamperLastUpdatedState(timeZoneProvider.getTimeZone()), fullUpdate);
                 break;
 
             case SMART_SCENE:
@@ -1149,8 +1202,8 @@ public class Clip2ThingHandler extends BaseThingHandler {
             sceneResourceEntries.clear();
 
             ResourceReference thisReference = getResourceReference();
-            List<Resource> scenes = allScenes.stream().filter(s -> thisReference.equals(s.getGroup()))
-                    .collect(Collectors.toList());
+            Set<Resource> scenes = allScenes.stream().filter(s -> thisReference.equals(s.getGroup()))
+                    .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Resource::getName))));
 
             if (!scenes.isEmpty()) {
                 sceneContributorsCache.putAll(scenes.stream().collect(Collectors.toMap(s -> s.getId(), s -> s)));
