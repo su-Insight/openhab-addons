@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -323,17 +323,11 @@ public class KeContactHandler extends BaseThingHandler {
                         break;
                     }
                     case "Enable sys": {
-                        int state = entry.getValue().getAsInt();
-                        switch (state) {
-                            case 1: {
-                                updateState(CHANNEL_ENABLED, OnOffType.ON);
-                                break;
-                            }
-                            default: {
-                                updateState(CHANNEL_ENABLED, OnOffType.OFF);
-                                break;
-                            }
-                        }
+                        updateState(CHANNEL_ENABLED_SYSTEM, OnOffType.from(entry.getValue().getAsInt() == 1));
+                        break;
+                    }
+                    case "Enable user": {
+                        updateState(CHANNEL_ENABLED_USER, OnOffType.from(entry.getValue().getAsInt() == 1));
                         break;
                     }
                     case "Curr HW": {
@@ -558,7 +552,7 @@ public class KeContactHandler extends BaseThingHandler {
                     }
                     break;
                 }
-                case CHANNEL_ENABLED: {
+                case CHANNEL_ENABLED_USER: {
                     if (command instanceof OnOffType) {
                         if (command == OnOffType.ON) {
                             transceiver.send("ena 1", this);
