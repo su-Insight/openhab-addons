@@ -96,12 +96,12 @@ The binding provides the same feature set across all devices as good as possible
 | shellywalldisplay    | Shelly Plus Wall Display                                 | SAWD-0A1XX10EU1              |
 
 ### Generation 2 Plus Mini series
+
 | thing-type           | Model                                                    | Vendor ID                    |
 | -------------------- | -------------------------------------------------------- | ---------------------------- |
-| shellymini1          | Shelly Plus 1 Mini with 1x relay                         | SNSW-001X16EU                |
-| shellymini1pm        | Shelly Plus 1PM Mini with 1x relay + power meter         | SNPM-001PCEU16               |
-| shellyminipm         | Shelly Plus PM Mini with 1x power meter                  | SNSW-001P8EU                 |
-
+| shellymini1          | Shelly Plus 1 Mini with 1x relay                         | SNSW-001X8EU                 |
+| shellymini1pm        | Shelly Plus 1PM Mini with 1x relay + power meter         | SNSW-001P8EU                 |
+| shellyminipm         | Shelly Plus PM Mini with 1x power meter                  | SNPM-001PCEU16               |
 
 ### Generation 2 Pro series
 
@@ -402,14 +402,18 @@ A new alarm will be triggered on a new condition or every 5 minutes if the condi
 
 ### Non-battery powered devices
 
-| Event Type  | Description                                                                       |
-| ----------- | --------------------------------------------------------------------------------- |
-| RESTARTED   | The device has been restarted. This could be an indicator for a firmware problem. |
-| WEAK_SIGNAL | An alarm is triggered when RSSI is < -80, which indicates an unstable connection. |
-| OVER_TEMP   | The device is overheating, check installation and housing.                        |
-| OVER_LOAD   | An over load condition has been detected, e.g. from the roller motor.             |
-| OVER_POWER  | Maximum allowed power was exceeded. The relay was turned off.                     |
-| LOAD_ERROR  | Device reported a load problem, so far Dimmer only.                               |
+| Event Type   | Description                                                                       |
+| ------------ | --------------------------------------------------------------------------------- |
+| RESTARTED    | The device has been restarted. This could be an indicator for a firmware problem. |
+| WEAK_SIGNAL  | An alarm is triggered when RSSI is < -80, which indicates an unstable connection. |
+| OVERTEMP     | The device is overheating, check installation and housing.                        |
+| OVERLOAD     | An over load condition has been detected, e.g. from the roller motor.             |
+| OVERPOWER    | Maximum allowed power was exceeded. The relay was turned off.                     |
+| LOAD_ERROR   | Device reported a load problem.                                                   |
+| SENSOR_ERROR | Device reported a sensor problem.                                                 |
+| VALVE_ERROR  | Device reported a problem with the valve.                                         |
+| VIBRATION    | Device reported vibration.                                                        |
+| LOW_BATTERY  | Device reported low battery.                                                      |
 
 ### Sensors
 
@@ -1178,6 +1182,33 @@ Refer to [Smartify Roller Shutters with openHAB and Shelly](doc/UseCaseSmartRoll
 |       | totalKWH     | Number   | yes       | Total energy consumption in kwh since the device powered up (resets on restart)   |
 |       | lastUpdate   | DateTime | yes       | Timestamp of the last measurement                                                 |
 
+### Shelly Plus Dimmer 10v (thing-type: shellyplus10v)
+
+| Group | Channel      | Type     | read-only | Description                                                                       |
+| ----- | ------------ | -------- | --------- | --------------------------------------------------------------------------------- |
+| relay | brightness   | Dimmer   | r/w       | Currently selected brightness.                                                    |
+|       | outputName   | String   | yes       | Logical name of this relay output as configured in the Shelly App                 |
+|       | input1       | Switch   | yes       | ON: Input/Button for input 1 is powered, see general notes on channels            |
+|       | button1      | Trigger  | yes       | Event trigger, see section Button Events                                          |
+|       | lastEvent1   | String   | yes       | Last event type (S/SS/SSS/L) for input 1                                          |
+|       | eventCount1  | Number   | yes       | Counter gets incremented every time the device issues a button event.             |
+|       | input2       | Switch   | yes       | ON: Input/Button for channel 2 is powered, see general notes on channels          |
+|       | button2      | Trigger  | yes       | Event trigger, see section Button Events                                          |
+|       | lastEvent2   | String   | yes       | Last event type (S/SS/SSS/L) for input 2                                          |
+|       | eventCount2  | Number   | yes       | Counter gets incremented every time the device issues a button event.             |
+|       | autoOn       | Number   | r/w       | Relay #1: Sets a  timer to turn the device ON after every OFF command; in seconds |
+|       | autoOff      | Number   | r/w       | Relay #1: Sets a  timer to turn the device OFF after every ON command; in seconds |
+|       | timerActive  | Switch   | yes       | Relay #1: ON: An auto-on/off timer is active                                      |
+| meter | currentWatts | Number   | yes       | Current power consumption in Watts                                                |
+|       | lastPower1   | Number   | yes       | Energy consumption for a round minute, 1 minute  ago                              |
+|       | totalKWH     | Number   | yes       | Total energy consumption in kwh since the device powered up (resets on restart)   |
+|       | lastUpdate   | DateTime | yes       | Timestamp of the last measurement                                                 |
+
+`Note: The Dimmer should be calibrated using the device Web UI or Shelly App.`
+
+Using the Thing configuration option `brightnessAutoOn` you could decide if the light is turned on when a brightness > 0 is set.
+`true`:  Brightness will be set and device output is powered = light turns on with the new brightness
+`false`: Brightness will be set, but output stays unchanged so light will not be switched on when it's currently off.
 
 ### Shelly Plus i4, i4DC (thing-types: shellyplusi4, shellyplusi4dc)
 
@@ -1451,8 +1482,6 @@ See notes on discovery of Shelly BLU devices above.
 |         | lowBattery    | Switch   | yes       | Low battery alert (< 20%)                                                           |
 | device  | gatewayDevice | String   | yes       | Shelly forwarded last status update (BLU gateway), could vary from packet to packet |
 
-
-
 ### Shelly BLU Door/Window Sensor (thing-type: shellybludw)
 
 See notes on discovery of Shelly BLU devices above.
@@ -1467,7 +1496,7 @@ See notes on discovery of Shelly BLU devices above.
 |         | lowBattery    | Switch   | yes       | Low battery alert (< 20%)                                                           |
 | device  | gatewayDevice | String   | yes       | Shelly forwarded last status update (BLU gateway), could vary from packet to packet |
 
-## Shelly BLU Motion Sensor (thing-type: shellyblumotion)
+### Shelly BLU Motion Sensor (thing-type: shellyblumotion)
 
 See notes on discovery of Shelly BLU devices above.
 

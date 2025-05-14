@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -145,15 +145,18 @@ public class ShellyDiscoveryParticipant implements MDNSDiscoveryParticipant {
 
             boolean gen2 = "2".equals(service.getPropertyString("gen"));
             ShellyApiInterface api = null;
+            boolean auth = false;
             ShellySettingsDevice devInfo;
             try {
                 api = gen2 ? new Shelly2ApiRpc(name, config, httpClient) : new Shelly1HttpApi(name, config, httpClient);
                 api.initialize();
                 devInfo = api.getDeviceInfo();
                 model = devInfo.type;
+                auth = devInfo.auth;
                 if (devInfo.name != null) {
                     deviceName = devInfo.name;
                 }
+
                 profile = api.getDeviceProfile(thingType, devInfo);
                 api.close();
                 logger.debug("{}: Shelly settings : {}", name, profile.settingsJson);
@@ -191,6 +194,7 @@ public class ShellyDiscoveryParticipant implements MDNSDiscoveryParticipant {
                 addProperty(properties, PROPERTY_DEV_TYPE, thingType);
                 addProperty(properties, PROPERTY_DEV_GEN, gen2 ? "2" : "1");
                 addProperty(properties, PROPERTY_DEV_MODE, mode);
+                addProperty(properties, PROPERTY_DEV_AUTH, auth ? "yes" : "no");
 
                 logger.debug("{}: Adding Shelly {}, UID={}", name, deviceName, thingUID.getAsString());
                 String thingLabel = deviceName.isEmpty() ? name + " - " + address
