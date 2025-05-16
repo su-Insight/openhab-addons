@@ -18,9 +18,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
- * @author Martin Grześlowski - Initial contribution
- */
-/**
  * The {@link SalusBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
@@ -36,9 +33,10 @@ public class SalusBindingConstants {
     public static final ThingTypeUID SALUS_DEVICE_TYPE = new ThingTypeUID(BINDING_ID, "salus-device");
     public static final ThingTypeUID SALUS_IT600_DEVICE_TYPE = new ThingTypeUID(BINDING_ID, "salus-it600-device");
     public static final ThingTypeUID SALUS_SERVER_TYPE = new ThingTypeUID(BINDING_ID, "salus-cloud-bridge");
+    public static final ThingTypeUID SALUS_AWS_TYPE = new ThingTypeUID(BINDING_ID, "salus-aws-bridge");
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(SALUS_DEVICE_TYPE,
-            SALUS_IT600_DEVICE_TYPE, SALUS_SERVER_TYPE);
+            SALUS_IT600_DEVICE_TYPE, SALUS_SERVER_TYPE, SALUS_AWS_TYPE);
 
     public static class SalusCloud {
         public static final String DEFAULT_URL = "https://eu.salusconnect.io";
@@ -64,6 +62,7 @@ public class SalusBindingConstants {
             public static final String TEMPERATURE = "temperature";
             public static final String EXPECTED_TEMPERATURE = "expected-temperature";
             public static final String WORK_TYPE = "work-type";
+            public static final String RUNNING_STATE = "running-state";
         }
 
         public static final String GENERIC_OUTPUT_CHANNEL = "generic-output-channel";
