@@ -44,7 +44,9 @@ import org.openhab.binding.awattar.internal.AwattarNonConsecutiveBestPriceResult
 import org.openhab.binding.awattar.internal.AwattarPrice;
 import org.openhab.core.i18n.TimeZoneProvider;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
+import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -97,7 +99,7 @@ public class AwattarBestPriceHandler extends BaseThingHandler {
                  * here
                  */
                 thingRefresher = scheduler.scheduleAtFixedRate(this::refreshChannels,
-                        getMillisToNextMinute(1, timeZoneProvider), THING_REFRESH_INTERVAL * 1000,
+                        getMillisToNextMinute(1, timeZoneProvider), THING_REFRESH_INTERVAL * 1000L,
                         TimeUnit.MILLISECONDS);
             }
         }
@@ -140,7 +142,7 @@ public class AwattarBestPriceHandler extends BaseThingHandler {
         }
         AwattarBestPriceConfiguration config = getConfigAs(AwattarBestPriceConfiguration.class);
         TimeRange timerange = getRange(config.rangeStart, config.rangeDuration, bridgeHandler.getTimeZone());
-        if (!(bridgeHandler.containsPriceFor(timerange.start()) && bridgeHandler.containsPriceFor(timerange.end()))) {
+        if (!(bridgeHandler.containsPriceFor(timerange))) {
             updateState(channelUID, state);
             return;
         }
@@ -195,12 +197,16 @@ public class AwattarBestPriceHandler extends BaseThingHandler {
                 diff = result.getStart() - Instant.now().toEpochMilli();
                 if (diff >= 0) {
                     state = getDuration(diff);
+                } else {
+                    state = QuantityType.valueOf(0, Units.MINUTE);
                 }
                 break;
             case CHANNEL_REMAINING:
-                diff = result.getEnd() - Instant.now().toEpochMilli();
                 if (result.isActive()) {
+                    diff = result.getEnd() - Instant.now().toEpochMilli();
                     state = getDuration(diff);
+                } else {
+                    state = QuantityType.valueOf(0, Units.MINUTE);
                 }
                 break;
             case CHANNEL_HOURS:
