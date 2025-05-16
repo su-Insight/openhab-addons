@@ -83,6 +83,7 @@
     <module>org.openhab.binding.bluetooth.generic</module>
     <module>org.openhab.binding.bluetooth.govee</module>
     <module>org.openhab.binding.bluetooth.grundfosalpha</module>
+    <module>org.openhab.binding.bluetooth.hdpowerview</module>
     <module>org.openhab.binding.bluetooth.radoneye</module>
     <module>org.openhab.binding.bluetooth.roaming</module>
     <module>org.openhab.binding.bluetooth.ruuvitag</module>
@@ -128,7 +129,6 @@
     <module>org.openhab.binding.ecovacs</module>
     <module>org.openhab.binding.ecowatt</module>
     <module>org.openhab.binding.ekey</module>
-    <module>org.openhab.binding.electroluxair</module>
     <module>org.openhab.binding.elerotransmitterstick</module>
     <module>org.openhab.binding.elroconnects</module>
     <module>org.openhab.binding.emotiva</module>
@@ -146,8 +146,10 @@
     <module>org.openhab.binding.exec</module>
     <module>org.openhab.binding.feed</module>
     <module>org.openhab.binding.feican</module>
+    <module>org.openhab.binding.fenecon</module>
     <module>org.openhab.binding.fineoffsetweatherstation</module>
     <module>org.openhab.binding.flicbutton</module>
+    <module>org.openhab.binding.flume</module>
     <module>org.openhab.binding.fmiweather</module>
     <module>org.openhab.binding.folderwatcher</module>
     <module>org.openhab.binding.folding</module>
@@ -247,6 +249,7 @@
     <module>org.openhab.binding.meteoalerte</module>
     <module>org.openhab.binding.meteoblue</module>
     <module>org.openhab.binding.meteostick</module>
+    <module>org.openhab.binding.metofficedatahub</module>
     <module>org.openhab.binding.mffan</module>
     <module>org.openhab.binding.miele</module>
     <module>org.openhab.binding.mielecloud</module>
@@ -379,6 +382,7 @@
     <module>org.openhab.binding.solaredge</module>
     <module>org.openhab.binding.solarforecast</module>
     <module>org.openhab.binding.solarlog</module>
+    <module>org.openhab.binding.solarman</module>
     <module>org.openhab.binding.solarmax</module>
     <module>org.openhab.binding.solarwatt</module>
     <module>org.openhab.binding.solax</module>
@@ -393,6 +397,7 @@
     <module>org.openhab.binding.speedtest</module>
     <module>org.openhab.binding.spotify</module>
     <module>org.openhab.binding.squeezebox</module>
+    <module>org.openhab.binding.sunsynk</module>
     <module>org.openhab.binding.surepetcare</module>
     <module>org.openhab.binding.synopanalyzer</module>
     <module>org.openhab.binding.systeminfo</module>
@@ -406,6 +411,7 @@
     <module>org.openhab.binding.tellstick</module>
     <module>org.openhab.binding.tesla</module>
     <module>org.openhab.binding.teslapowerwall</module>
+    <module>org.openhab.binding.teslascope</module>
     <module>org.openhab.binding.tibber</module>
     <module>org.openhab.binding.tivo</module>
     <module>org.openhab.binding.touchwand</module>
@@ -428,6 +434,7 @@
     <module>org.openhab.binding.verisure</module>
     <module>org.openhab.binding.vesync</module>
     <module>org.openhab.binding.vigicrues</module>
+    <module>org.openhab.binding.visualcrossing</module>
     <module>org.openhab.binding.vitotronic</module>
     <module>org.openhab.binding.vizio</module>
     <module>org.openhab.binding.volvooncall</module>
