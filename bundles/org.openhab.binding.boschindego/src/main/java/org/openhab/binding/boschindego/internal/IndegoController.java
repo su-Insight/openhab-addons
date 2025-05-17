@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -261,8 +261,8 @@ public class IndegoController {
     /**
      * Sends a PUT/POST request to the server.
      * 
-     * @param method the type of request ({@link org.eclipse.jetty.http.HttpMethod.PUT} or
-     *            {@link org.eclipse.jetty.http.HttpMethod.POST})
+     * @param method the type of request ({@link org.eclipse.jetty.http.HttpMethod#PUT} or
+     *            {@link org.eclipse.jetty.http.HttpMethod#POST})
      * @param path the relative path to which the request should be sent
      * @param requestDto the DTO which should be sent to the server as JSON
      * @throws IndegoAuthenticationException if request was rejected as unauthorized

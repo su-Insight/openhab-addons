@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -82,8 +82,8 @@ public class RuleUtils {
      * Validates a hue http address used in schedules and hue rules.
      *
      * @param ds A hue datastore to verify that referred lights/groups do exist
-     * @param address Relative hue API address. Example: "/api/<username>/groups/1/action" or
-     *            "/api/<username>/lights/1/state"
+     * @param address Relative hue API address. Example: {@code "/api/<username>/groups/1/action"} or
+     *            {@code "/api/<username>/lights/1/state"}
      * @throws IllegalStateException Thrown if address is invalid
      */
     @SuppressWarnings({ "unused", "null" })

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -34,9 +34,11 @@ import org.xml.sax.SAXException;
  * this:
  *
  * <pre>
+ * {@code
  * <xmp>
  *   <fsapiResponse> <status>FS_OK</status> <value><u8>1</u8></value> </fsapiResponse>
  * </xmp>
+ * }
  * </pre>
  *
  * This class parses this XML data and provides functions for reading and casting typical fields.

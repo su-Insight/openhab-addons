@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
  *
  * A class that wraps the communication to Pioneer AVR devices by using Input/Ouptut streams.
  *
- * see {@link http ://www.pioneerelectronics.com/StaticFiles/PUSA/Files/Home%20Custom %20Install/VSX-1120-K-RS232.PDF}
- * for the protocol specs
- *
  * Based on the Onkyo binding by Pauli Anttila and others.
  *
+ * @see <a href="http://www.pioneerelectronics.com/StaticFiles/PUSA/Files/Home%20Custom%20Install/VSX-1120-K-RS232.PDF">
+ *      http://www.pioneerelectronics.com/StaticFiles/PUSA/Files/Home%20Custom%20Install/VSX-1120-K-RS232.PDF</a>
+ *      for the protocol specs
  * @author Antoine Besnard - Initial contribution
  * @author Rainer Ostendorf - Initial contribution
  * @author Leroy Foerster - Listening Mode, Playing Listening Mode

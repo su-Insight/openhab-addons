@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -34,7 +34,7 @@ import org.w3c.dom.Node;
  * This class implements the Yamaha Receiver protocol related to navigation functionally. USB, NET_RADIO, IPOD and
  * other inputs are using the same way of playback control.
  * <p>
- * The XML nodes <Play_Info> and <Play_Control> are used.
+ * The XML nodes {@code <Play_Info>} and {@code <Play_Control>} are used.
  * <p>
  * Example:
  * <p>

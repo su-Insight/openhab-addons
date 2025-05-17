@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -31,8 +31,8 @@ import org.openhab.core.types.UnDefType;
  * 
  * chapter "1.2.7 TripLabel" in Technical Interface Description for external Developers
  *
- * @see See <a href="https://developers.deutschebahn.com/db-api-marketplace/apis/product/timetables">DB API
- *      Marketplace</a>
+ * See <a href="https://developers.deutschebahn.com/db-api-marketplace/apis/product/timetables">DB API
+ * Marketplace</a>
  * 
  * @author Sönke Küper - Initial contribution.
  * 

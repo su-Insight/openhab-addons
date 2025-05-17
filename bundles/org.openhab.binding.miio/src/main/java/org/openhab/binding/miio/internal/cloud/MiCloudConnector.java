@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -149,7 +149,7 @@ public class MiCloudConnector {
 
     public String getMapUrl(String vacuumMap, String country) throws MiCloudException {
         String url = getApiUrl(country) + "/home/getmapfileurl";
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("data", "{\"obj_name\":\"" + vacuumMap + "\"}");
         String mapResponse = request(url, map);
         logger.trace("Response: {}", mapResponse);
@@ -201,6 +201,25 @@ public class MiCloudConnector {
         return request("/home/rpc/" + id, country, command);
     }
 
+    public JsonObject getHomeList(String country) {
+        String response = "";
+        try {
+            response = request("/homeroom/gethome", country,
+                    "{\"fg\":false,\"fetch_share\":true,\"fetch_share_dev\":true,\"limit\":300,\"app_ver\":7,\"fetch_cariot\":true}");
+            logger.trace("gethome response: {}", response);
+            final JsonElement resp = JsonParser.parseString(response);
+            if (resp.isJsonObject() && resp.getAsJsonObject().has("result")) {
+                return resp.getAsJsonObject().get("result").getAsJsonObject();
+            }
+        } catch (JsonParseException e) {
+            logger.info("{} error while parsing rooms: '{}'", e.getMessage(), response);
+        } catch (MiCloudException e) {
+            logger.info("{}", e.getMessage());
+            loginFailedCounter++;
+        }
+        return new JsonObject();
+    }
+
     public List<CloudDeviceDTO> getDevices(String country) {
         final String response = getDeviceString(country);
         List<CloudDeviceDTO> devicesList = new ArrayList<>();
@@ -247,7 +266,7 @@ public class MiCloudConnector {
     }
 
     public String request(String urlPart, String country, String params) throws MiCloudException {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         map.put("data", params);
         return request(urlPart, country, map);
     }

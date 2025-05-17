@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -73,7 +73,7 @@ public abstract class NhcThermostat {
      * @param overrule the overrule temperature in 0.1°C multiples
      * @param overruletime in minutes
      * @param ecosave
-     * @param demand 0 if no demand, > 0 if heating, < 0 if cooling
+     * @param demand 0 if no demand, > 0 if heating, &lt; 0 if cooling
      */
     public void updateState(int measured, int setpoint, int mode, int overrule, int overruletime, int ecosave,
             int demand) {
@@ -304,7 +304,7 @@ public abstract class NhcThermostat {
             logger.debug("Thermostat mode {} not recognized, default to Day mode", mode);
         }
         executeMode(intMode);
-    };
+    }
 
     /**
      * Sends thermostat setpoint to Niko Home Control. This method is implemented in {@link NhcThermostat1} and

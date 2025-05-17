@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -41,7 +41,7 @@ import org.openhab.core.types.UnDefType;
  *
  * @author Sander Biesenbeek - Initial contribution
  * @author Ruud Beukema - Initial contribution (parallel development)
- * @author Martin van Wingerden - Joined contribution of Sander & Ruud
+ * @author Martin van Wingerden - Joined contribution of Sander and Ruud
  */
 public class RFXComThermostat3Message extends RFXComDeviceMessageImpl<RFXComThermostat3Message.SubType> {
     public enum SubType implements ByteEnumWrapper {

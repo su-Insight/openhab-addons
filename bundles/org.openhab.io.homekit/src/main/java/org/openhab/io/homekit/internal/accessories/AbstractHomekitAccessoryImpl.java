@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -84,6 +84,8 @@ public abstract class AbstractHomekitAccessoryImpl implements HomekitAccessory {
     /**
      * Gives an accessory an opportunity to populate additional characteristics after all optional
      * charactericteristics have been added.
+     * 
+     * @throws HomekitException
      */
     public void init() throws HomekitException {
     }
@@ -333,6 +335,9 @@ public abstract class AbstractHomekitAccessoryImpl implements HomekitAccessory {
      * of the caller to add characteristics when the primary service is created.
      *
      * @param characteristic
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
      */
     @NonNullByDefault
     public void addCharacteristic(Characteristic characteristic)
@@ -389,7 +394,7 @@ public abstract class AbstractHomekitAccessoryImpl implements HomekitAccessory {
             BigDecimal trueThreshold, boolean invertThreshold) throws IncompleteAccessoryException {
         final HomekitTaggedItem taggedItem = getCharacteristic(characteristicType)
                 .orElseThrow(() -> new IncompleteAccessoryException(characteristicType));
-        return new BooleanItemReader(taggedItem.getItem(), taggedItem.isInverted() ? OnOffType.OFF : OnOffType.ON,
+        return new BooleanItemReader(taggedItem.getItem(), OnOffType.from(!taggedItem.isInverted()),
                 taggedItem.isInverted() ? OpenClosedType.CLOSED : OpenClosedType.OPEN, trueThreshold, invertThreshold);
     }
 
@@ -405,7 +410,7 @@ public abstract class AbstractHomekitAccessoryImpl implements HomekitAccessory {
             throws IncompleteAccessoryException {
         final HomekitTaggedItem taggedItem = getCharacteristic(characteristicType)
                 .orElseThrow(() -> new IncompleteAccessoryException(characteristicType));
-        return new BooleanItemReader(taggedItem.getItem(), taggedItem.isInverted() ? OnOffType.OFF : OnOffType.ON,
+        return new BooleanItemReader(taggedItem.getItem(), OnOffType.from(!taggedItem.isInverted()),
                 taggedItem.isInverted() ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
     }
 
