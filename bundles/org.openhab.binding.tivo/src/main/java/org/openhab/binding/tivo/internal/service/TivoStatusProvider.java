@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -60,7 +60,7 @@ public class TivoStatusProvider {
      * Instantiates a new TivoConfigStatusProvider.
      *
      * @param tivoConfigData {@link TivoConfigData} configuration data for the specific thing.
-     * @param tivoHandler {@link TivoHandler} parent handler object for the TivoConfigStatusProvider.
+     * @param tivoHandler {@link TiVoHandler} parent handler object for the TivoConfigStatusProvider.
      *
      */
 
@@ -419,7 +419,6 @@ public class TivoStatusProvider {
          * BufferedReader.
          *
          * @param inputStream socket input stream.
-         * @throws IOException
          */
         public StreamReader(InputStream inputStream) {
             this.setName("OH-binding-" + thingUid + "-" + tivoConfigData.getHost() + ":" + tivoConfigData.getTcpPort());

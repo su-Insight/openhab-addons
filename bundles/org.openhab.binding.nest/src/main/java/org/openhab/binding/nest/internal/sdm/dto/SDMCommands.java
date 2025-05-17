@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -30,7 +30,8 @@ import org.openhab.binding.nest.internal.sdm.dto.SDMTraits.SDMThermostatMode;
  *
  * @author Wouter Born - Initial contribution
  *
- * @see https://developers.google.com/nest/device-access/reference/rest/v1/enterprises.devices/executeCommand
+ * @see <a href="https://developers.google.com/nest/device-access/reference/rest/v1/enterprises.devices/executeCommand">
+ *      https://developers.google.com/nest/device-access/reference/rest/v1/enterprises.devices/executeCommand</a>
  */
 public class SDMCommands {
 

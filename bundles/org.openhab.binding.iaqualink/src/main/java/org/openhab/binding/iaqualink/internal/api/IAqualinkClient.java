@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -225,7 +225,7 @@ public class IAqualinkClient {
      * @param sessionID
      * @param auxID
      * @param lightValue
-     * @param subtype
+     * @param subType
      * @return
      * @throws IOException
      * @throws NotAuthorizedException
@@ -244,10 +244,10 @@ public class IAqualinkClient {
     /**
      * Sends an Auxiliary dimmer command
      *
-     * @param serialNumber
-     * @param sessionId
-     * @param auxId
-     * @param lightValue
+     * @param serial
+     * @param sessionID
+     * @param auxID
+     * @param level
      * @return
      * @throws IOException
      * @throws NotAuthorizedException

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -110,7 +110,8 @@ public class VeluxActions implements ThingActions {
      *
      * @param actions ThingActions from the caller
      * @param nodeId the node Id in the bridge
-     * @param relativePercent the target position relative to its current position (-100% <= relativePercent <= +100%)
+     * @param relativePercent the target position relative to its current position
+     *            ({@code -100% <= relativePercent <= +100%})
      * @return true if the command was sent
      * @throws IllegalArgumentException if actions is invalid
      * @throws IllegalStateException if anything else is wrong

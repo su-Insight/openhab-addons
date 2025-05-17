@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@VehicleAction } class is responsible to call corresponding
+ * The {@link VolvoOnCallActions} class is responsible to call corresponding
  * action on Vehicle Handler
  *
  * @author Gaël L'hopital - Initial contribution

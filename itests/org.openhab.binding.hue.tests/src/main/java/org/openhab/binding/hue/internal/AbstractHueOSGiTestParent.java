@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -31,6 +31,7 @@ public class AbstractHueOSGiTestParent extends JavaOSGiTest {
      *
      * @param thing the thing
      * @param clazz type of thing handler
+     * @param <T> a ThingHandler or subtype
      * @return the thing handler
      */
     protected <T extends ThingHandler> T getThingHandler(Thing thing, Class<T> clazz) {

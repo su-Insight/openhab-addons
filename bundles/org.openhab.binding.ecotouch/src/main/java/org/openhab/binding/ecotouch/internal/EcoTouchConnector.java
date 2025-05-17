@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * app. The meaning of the EcoTouch tags was provided by Waterkotte's technical
  * service (by an excerpt of a developer manual).
  *
- * @author Sebastian Held <sebastian.held@gmx.de> - Initial contribution
+ * @author Sebastian Held - Initial contribution
  * @since 1.5.0
  */
 

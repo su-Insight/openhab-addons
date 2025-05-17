@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -206,7 +206,7 @@ public abstract class TapoDevice extends BaseThingHandler {
     /**
      * Stop scheduler
      *
-     * @param scheduler ScheduledFeature<?> which schould be stopped
+     * @param scheduler {@code ScheduledFeature<?>} which schould be stopped
      */
     protected void stopScheduler(@Nullable ScheduledFuture<?> scheduler) {
         if (scheduler != null) {

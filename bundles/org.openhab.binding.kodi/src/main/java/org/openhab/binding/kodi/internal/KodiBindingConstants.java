@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -23,7 +23,7 @@ import org.openhab.core.thing.ThingTypeUID;
  *
  * @author Paul Frank - Initial contribution
  * @author Christoph Weitkamp - Added channels for opening PVR TV or Radio streams
- * @author Andreas Reinhardt & Christoph Weitkamp - Added channels for thumbnail and fanart
+ * @author Andreas Reinhardt and Christoph Weitkamp - Added channels for thumbnail and fanart
  * @author Christoph Weitkamp - Improvements for playing audio notifications
  */
 @NonNullByDefault

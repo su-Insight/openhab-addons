@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -16,7 +16,8 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * The Class {@link TivoConfigData} stores the dynamic configuration parameters used within the {@link TiVoHandler} and
+ * The Class {@link TivoConfigData} stores the dynamic configuration parameters used within the
+ * {@link org.openhab.binding.tivo.internal.handler.TiVoHandler} and
  * {@link TivoStatusProvider}.
  *
  * @author Jayson Kubilis (DigitalBytes) - Initial contribution

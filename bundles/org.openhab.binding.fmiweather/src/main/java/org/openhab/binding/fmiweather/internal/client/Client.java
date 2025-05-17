@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -51,13 +51,15 @@ import org.xml.sax.SAXException;
  *
  * Client for accessing FMI weather data
  *
+ * <p>
  * Subject to license terms https://en.ilmatieteenlaitos.fi/open-data
  *
- *
- * All weather stations:
- * https://opendata.fmi.fi/wfs/fin?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=fmi::ef::stations&networkid=121&
- * Networkid parameter isexplained in entries of
- * https://opendata.fmi.fi/wfs/fin?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=fmi::ef::stations
+ * @see <a href=
+ *      "https://opendata.fmi.fi/wfs/fin?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=fmi::ef::stations&networkid=121&">
+ *      All weather stations</a>
+ * @see <a href=
+ *      "https://opendata.fmi.fi/wfs/fin?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=fmi::ef::stations">
+ *      Networkid parameter is explained in entries of</a>
  *
  * @author Sami Salonen - Initial contribution
  *
