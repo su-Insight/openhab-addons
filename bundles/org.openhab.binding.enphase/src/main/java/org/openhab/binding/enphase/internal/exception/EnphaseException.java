@@ -10,30 +10,26 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.hue.internal.dto.clip2.enums;
+package org.openhab.binding.enphase.internal.exception;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * Enum for scene recall actions.
  *
- * @author Andrew Fiddian-Green - Initial contribution
+ *
+ * @author Hilbrand Bouwkamp - Initial contribution
  */
 @NonNullByDefault
-public enum RecallAction {
-    ACTIVE,
-    DYNAMIC_PALETTE,
-    STATIC;
+public class EnphaseException extends Exception {
 
-    public static RecallAction of(@Nullable String value) {
-        if (value != null) {
-            try {
-                return valueOf(value.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // fall through
-            }
-        }
-        return ACTIVE;
+    private static final long serialVersionUID = 1L;
+
+    public EnphaseException(final String message) {
+        super(message);
+    }
+
+    public EnphaseException(final String message, final @Nullable Throwable throwable) {
+        super(message, throwable);
     }
 }
