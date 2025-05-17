@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -51,7 +51,7 @@ public interface HomematicConfigDescriptionProvider extends ConfigDescriptionPro
      * which are excluded by
      * {@link org.openhab.binding.homematic.type.HomematicThingTypeExcluder}
      * 
-     * @param URI config-description-uri
+     * @param uri config-description-uri
      *            e.g. <i>thing-type:homematic:HM-WDS40-TH-I-2</i>
      * @return ConfigDescription that was added to HomematicConfigDescriptionProvider,
      *         identified by its config-description-uri<br>

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -66,10 +66,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link EnOceanBridgeHandler} is responsible for sending ESP3Packages build by
- * {@link org.openhab.binding.enocean.internal.handler.EnOceanActuatorHandler} and
- * transferring received ESP3Packages to
- * {@link org.openhab.binding.enocean.internal.handler.EnOceanSensorHandler}.
+ * The {@link EnOceanBridgeHandler} is responsible for sending ESP3Packages build by {@link EnOceanBaseActuatorHandler}
+ * and transferring received ESP3Packages to {@link EnOceanBaseSensorHandler}.
  *
  * @author Daniel Weber - Initial contribution
  */

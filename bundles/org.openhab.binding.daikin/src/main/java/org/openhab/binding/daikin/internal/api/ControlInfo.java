@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * Class for holding the set of parameters used by set and get control info.
  *
  * @author Tim Waterhouse - Initial Contribution
- * @author Paul Smedley <paul@smedley.id.au> - mods for Daikin Airbase
+ * @author Paul Smedley - mods for Daikin Airbase
  *
  */
 @NonNullByDefault

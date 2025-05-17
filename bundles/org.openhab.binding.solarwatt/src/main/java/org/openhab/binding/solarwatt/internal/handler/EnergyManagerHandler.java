@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -222,7 +222,7 @@ public class EnergyManagerHandler extends BaseBridgeHandler {
     }
 
     /**
-     * Setup the handler and trigger initial load via {@link EnergyManagerHandler::refreshDevices}.
+     * Setup the handler and trigger initial load via {@link EnergyManagerHandler#refreshDevices}.
      *
      * Web request against energy manager and loading of devices is deferred and will send the ONLINE
      * event after loading all devices.

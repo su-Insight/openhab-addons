@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * @author Tim Waterhouse - Initial Contribution
  * @author Paul Smedley - Modifications to support Airbase Controllers
  * @author Lukas Agethen - Added support for Energy Year reading, compressor frequency and powerful mode
- * @author Wouter Denayer - Added to support for weekly & daily energy reading
+ * @author Wouter Denayer - Added to support for weekly and daily energy reading
  *
  */
 @NonNullByDefault

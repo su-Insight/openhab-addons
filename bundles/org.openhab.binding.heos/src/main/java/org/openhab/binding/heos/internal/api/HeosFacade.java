@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -494,7 +494,7 @@ public class HeosFacade {
     /**
      * Ask for the actual shuffle mode of the player. The result has
      * to be handled by the event controller. The HEOS system returns {@link HeosConstants#ON},
-     * {@link HeosConstants#HEOS_REPEAT_ALL} or {@link HeosConstants#HEOS_REPEAT_ONE}
+     * {@link HeosConstants#REPEAT_ALL} or {@link HeosConstants#REPEAT_ONE}
      *
      * @param id The player id the shuffle mode shall get for
      * @return

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -272,10 +272,12 @@ public abstract class AbstractMqttAttributeClass implements SubscribeFieldToMQTT
      * </p>
      *
      * <pre>
+     * {@code
      * void attributeChanged(..., boolean allMandatoryFieldsReceived) {
      *   if (allMandatoryFieldsReceived && !attributes.isComplete()) {
      *      // The attribute class is now complete but wasn't before...
      *   }
+     * }
      * }
      * </pre>
      */

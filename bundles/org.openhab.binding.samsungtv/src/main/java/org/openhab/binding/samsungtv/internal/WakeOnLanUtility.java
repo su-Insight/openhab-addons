@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -102,7 +102,7 @@ public class WakeOnLanUtility {
     /**
      * Send single WOL (Wake On Lan) package on all interfaces
      *
-     * @macAddress MAC address to send WOL package to
+     * @param macAddress MAC address to send WOL package to
      */
     public static void sendWOLPacket(String macAddress) {
         byte[] bytes = getWOLPackage(macAddress);

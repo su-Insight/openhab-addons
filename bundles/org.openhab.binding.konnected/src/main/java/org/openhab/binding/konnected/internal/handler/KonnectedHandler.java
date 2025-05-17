@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -104,8 +104,8 @@ public class KonnectedHandler extends BaseThingHandler {
     }
 
     /**
-     * Process a {@link WebHookEvent} that has been received by the Servlet from a Konnected module with respect to a
-     * sensor event or status update request
+     * Process a {@link KonnectedModuleGson} that has been received by the Servlet from a Konnected module with respect
+     * to a sensor event or status update request
      *
      * @param event the {@link KonnectedModuleGson} event that contains the state and pin information to be processed
      */
@@ -135,7 +135,7 @@ public class KonnectedHandler extends BaseThingHandler {
                     Integer state = event.getState();
                     logger.debug("The event state is: {}", state);
                     if (state != null) {
-                        OnOffType onOffType = state == zoneConfig.onValue ? OnOffType.ON : OnOffType.OFF;
+                        OnOffType onOffType = OnOffType.from(state == zoneConfig.onValue);
                         updateState(channelId, onOffType);
                     }
                 } else if (channelType.contains(CHANNEL_HUMIDITY)) {

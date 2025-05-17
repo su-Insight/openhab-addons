@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -105,7 +105,7 @@ import org.slf4j.LoggerFactory;
  * to the framework. All {@link MaxDevicesHandler}s use the
  * {@link MaxCubeBridgeHandler} to execute the actual commands.
  *
- * @author Andreas Heil (info@aheil.de) - Initial contribution
+ * @author Andreas Heil - Initial contribution
  * @author Marcel Verpaalen - Initial contribution OH2 version
  * @author Bernd Michael Helm (bernd.helm at helmundwalter.de) - Exclusive mode
  */
@@ -997,7 +997,7 @@ public class MaxCubeBridgeHandler extends BaseBridgeHandler {
 
     private boolean socketConnect() throws UnknownHostException, IOException {
         socket = new Socket(ipAddress, port);
-        socket.setSoTimeout((NETWORK_TIMEOUT));
+        socket.setSoTimeout(NETWORK_TIMEOUT);
         logger.debug("Open new connection... to {} port {}", ipAddress, port);
         reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         writer = new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8);

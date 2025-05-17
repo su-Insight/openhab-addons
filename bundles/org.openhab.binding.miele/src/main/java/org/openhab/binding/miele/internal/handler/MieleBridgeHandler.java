@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -74,7 +74,7 @@ import com.google.gson.JsonElement;
  *
  * @author Karel Goderis - Initial contribution
  * @author Kai Kreuzer - Fixed lifecycle issues
- * @author Martin Lepsy - Added protocol information to support WiFi devices & some refactoring for HomeDevice
+ * @author Martin Lepsy - Added protocol information to support WiFi devices and some refactoring for HomeDevice
  * @author Jacob Laursen - Fixed multicast and protocol support (Zigbee/LAN)
  **/
 @NonNullByDefault
@@ -543,7 +543,7 @@ public class MieleBridgeHandler extends BaseBridgeHandler {
                 if (cause == null) {
                     logger.debug("An exception occurred while getting the home devices: '{}'", e.getMessage());
                 } else {
-                    logger.debug("An exception occurred while getting the home devices: '{}' -> '{}", e.getMessage(),
+                    logger.debug("An exception occurred while getting the home devices: '{}' -> '{}'", e.getMessage(),
                             cause.getMessage());
                 }
             }

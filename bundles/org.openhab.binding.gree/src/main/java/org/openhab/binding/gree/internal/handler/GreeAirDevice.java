@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -213,7 +213,7 @@ public class GreeAirDevice {
 
     /**
      * SwingLfRig: controls the swing mode of the horizontal air blades (available on limited number of devices, e.g.
-     * some Cooper & Hunter units - thanks to mvmn)
+     * some Cooper and Hunter units - thanks to mvmn)
      *
      * 0: default
      * 1: full swing

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -271,7 +271,7 @@ public class OppoDiscoveryService extends AbstractDiscoveryService {
      * {@inheritDoc}
      *
      * Stops the discovery scan. We set {@link #scanning} to false (allowing the listening threads to end naturally
-     * within {@link #TIMEOUT) * 5 time then shutdown the {@link #executorService}
+     * within {@link #TIMEOUT_MS} * 5 time then shutdown the {@link #executorService}
      */
     @Override
     protected synchronized void stopScan() {
