@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Base class for devices provided by the MAX! protocol.
  *
- * @author Andreas Heil (info@aheil.de) - Initial contribution
+ * @author Andreas Heil - Initial contribution
  * @author Marcel Verpaalen - OH2 update + enhancements
  */
 public abstract class Device {
@@ -246,7 +246,7 @@ public abstract class Device {
     }
 
     public final OnOffType getBatteryLow() {
-        return (this.batteryLow ? OnOffType.ON : OnOffType.OFF);
+        return OnOffType.from(batteryLow);
     }
 
     public final String getRFAddress() {
