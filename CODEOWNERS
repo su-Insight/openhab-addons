@@ -96,6 +96,7 @@
 /bundles/org.openhab.binding.electroluxair/ @jannegpriv
 /bundles/org.openhab.binding.elerotransmitterstick/ @vbier
 /bundles/org.openhab.binding.elroconnects/ @mherwege
+/bundles/org.openhab.binding.emotiva/ @espenaf
 /bundles/org.openhab.binding.energenie/ @hmerk
 /bundles/org.openhab.binding.energidataservice/ @jlaur
 /bundles/org.openhab.binding.enigma2/ @gdolfen
@@ -312,7 +313,7 @@
 /bundles/org.openhab.binding.sagercaster/ @clinique
 /bundles/org.openhab.binding.saicismart/ @tisoft @dougculnane
 /bundles/org.openhab.binding.salus/ @magx2
-/bundles/org.openhab.binding.samsungtv/ @paulianttila
+/bundles/org.openhab.binding.samsungtv/ @NickWaterton
 /bundles/org.openhab.binding.satel/ @druciak
 /bundles/org.openhab.binding.semsportal/ @itb3
 /bundles/org.openhab.binding.senechome/ @vctender @KorbinianP @eguib
