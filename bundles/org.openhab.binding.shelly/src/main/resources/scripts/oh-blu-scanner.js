@@ -1,10 +1,10 @@
 /*
- * This script uses the BLE scan functionality in scripting to pass scan reults to openHAB
- * Supported BLU Devices: SBBT , SBDW
+ * This script uses the BLE scan functionality in scripting to pass scan results to openHAB
+ * Supported BLU Devices: BLU Button 1, BLU Door/Window, BLU Motion
  * Version 0.2
  */
 
-let ALLTERCO_DEVICE_NAME_PREFIX = ["SBBT", "SBDW"];
+let ALLTERCO_DEVICE_NAME_PREFIX = ["SBBT", "SBDW", "SBMO"];
 let ALLTERCO_MFD_ID_STR = "0ba9";
 let BTHOME_SVC_ID_STR = "fcd2";
 
@@ -25,9 +25,11 @@ let int24 = 5;
 let BTH = [];
 BTH[0x00] = { n: "pid", t: uint8 };
 BTH[0x01] = { n: "Battery", t: uint8, u: "%" };
+BTH[0x02] = { n: "Temperature", t: int16, f: 0.01 };
 BTH[0x05] = { n: "Illuminance", t: uint24, f: 0.01 };
 BTH[0x1a] = { n: "Door", t: uint8 };
 BTH[0x20] = { n: "Moisture", t: uint8 };
+BTH[0x21] = { n: "Motion", t: uint8 };
 BTH[0x2d] = { n: "Window", t: uint8 };
 BTH[0x3a] = { n: "Button", t: uint8 };
 BTH[0x3f] = { n: "Rotation", t: int16, f: 0.1 };
