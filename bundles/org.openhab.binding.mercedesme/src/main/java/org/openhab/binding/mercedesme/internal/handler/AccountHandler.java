@@ -227,7 +227,7 @@ public class AccountHandler extends BaseBridgeHandler implements AccessTokenRefr
             // all failed - start manual authorization
             String textKey = Constants.STATUS_TEXT_PREFIX + thing.getThingTypeUID().getId()
                     + Constants.STATUS_AUTH_NEEDED;
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE,
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                     textKey + " [\"" + thing.getProperties().get("callbackUrl") + "\"]");
         }
     }
@@ -324,7 +324,9 @@ public class AccountHandler extends BaseBridgeHandler implements AccessTokenRefr
         } else {
             if (!capabilitiesMap.containsKey(vin)) {
                 // only report new discovery if capabilities aren't discovered yet
-                discoveryService.vehicleDiscovered(this, vin, getCapabilities(vin));
+                Map<String, Object> discoveryProperties = getCapabilities(vin);
+                discoveryProperties.put("vin", vin);
+                discoveryService.vehicleDiscovered(this, vin, discoveryProperties);
             }
         }
     }
