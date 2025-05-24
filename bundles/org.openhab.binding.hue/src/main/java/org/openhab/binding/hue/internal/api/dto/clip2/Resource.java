@@ -921,6 +921,11 @@ public class Resource {
         return this;
     }
 
+    public Resource setStatus(@Nullable JsonElement status) {
+        this.status = status;
+        return this;
+    }
+
     @Override
     public String toString() {
         String id = this.id;
