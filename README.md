@@ -160,3 +160,36 @@ We have assembled some step-by-step guides for different IDEs on our developer d
 https://www.openhab.org/docs/developer/#setup-the-development-environment
 
 Happy coding!
+
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
+
+<!-- Last auto-update -->
