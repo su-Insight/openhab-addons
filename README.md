@@ -162,4 +162,3 @@ https://www.openhab.org/docs/developer/#setup-the-development-environment
 Happy coding!
 
 
-<!-- Last auto-update -->
