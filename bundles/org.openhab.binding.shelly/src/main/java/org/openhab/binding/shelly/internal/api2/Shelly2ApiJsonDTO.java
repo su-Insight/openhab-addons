@@ -55,6 +55,7 @@ public class Shelly2ApiJsonDTO {
     public static final String SHELLYRPC_METHOD_LED_SETCONFIG = "WD_UI.SetConfig";
     public static final String SHELLYRPC_METHOD_WIFIGETCONG = "Wifi.GetConfig";
     public static final String SHELLYRPC_METHOD_WIFISETCONG = "Wifi.SetConfig";
+    public static final String SHELLYRPC_METHOD_WIFILISTAPCLIENTS = "WiFi.ListAPClients";
     public static final String SHELLYRPC_METHOD_ETHGETCONG = "Eth.GetConfig";
     public static final String SHELLYRPC_METHOD_ETHSETCONG = "Eth.SetConfig";
     public static final String SHELLYRPC_METHOD_BLEGETCONG = "BLE.GetConfig";
@@ -82,7 +83,7 @@ public class Shelly2ApiJsonDTO {
 
     // Component types
     public static final String SHELLY2_PROFILE_RELAY = "switch";
-    public static final String SHELLY2_PROFILE_ROLLER = "cover";
+    public static final String SHELLY2_PROFILE_COVER = "cover";
 
     // Button types/modes
     public static final String SHELLY2_BTNT_MOMENTARY = "momentary";
@@ -183,13 +184,14 @@ public class Shelly2ApiJsonDTO {
         public String id;
         public String mac;
         public String model;
+        public String profile;
         public Integer gen;
         @SerializedName("fw_id")
-        public String firmware;
+        public String fw;
         public String ver;
         public String app;
         @SerializedName("auth_en")
-        public Boolean authEnable;
+        public Boolean auth;
         @SerializedName("auth_domain")
         public String authDomain;
     }
@@ -517,6 +519,21 @@ public class Shelly2ApiJsonDTO {
         public String id;
         public String src;
         public Shelly2GetConfigResult result;
+    }
+
+    public static class Shelly2APClientList {
+        public static class Shelly2APClient {
+            public String mac;
+            public String ip;
+            @SerializedName("ip_static")
+            public Boolean staticIP;
+            public Integer mport;
+            public Long since;
+        }
+
+        public Long ts;
+        @SerializedName("ap_clients")
+        public ArrayList<Shelly2APClient> apClients;
     }
 
     public static class Shelly2DeviceStatus {
@@ -1084,6 +1101,10 @@ public class Shelly2ApiJsonDTO {
         public Integer windowState;
         @SerializedName("Rotation")
         public Double rotation;
+        @SerializedName("Motion")
+        public Integer motionState;
+        @SerializedName("Temperature")
+        public Double temperature;
 
         public Integer rssi;
         public Integer tx_power;
