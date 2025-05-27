@@ -80,6 +80,7 @@ public class ValueDecoder {
     // omitted
     public static final Pattern XYY_PATTERN = Pattern
             .compile("(?:\\((?<x>\\d+(?:[,.]\\d+)?) (?<y>\\d+(?:[,.]\\d+)?)\\))?\\s*(?:(?<Y>\\d+(?:[,.]\\d+)?)\\s%)?");
+    public static final Pattern TSD_SEPARATOR = Pattern.compile("^[0-9](?<sep>[,\\.])[0-9][0-9][0-9].*");
 
     private static boolean check235001(byte[] data) throws KNXException {
         if (data.length != 6) {
@@ -174,6 +175,12 @@ public class ValueDecoder {
                     return new DecimalType(decValue);
                 case "3":
                     return handleDpt3(subType, translator);
+                case "6":
+                    if ("020".equals(subType)) {
+                        return handleStringOrDecimal(data, value, preferredType, 8);
+                    } else {
+                        return handleNumericDpt(id, translator, preferredType);
+                    }
                 case "10":
                     return handleDpt10(value);
                 case "11":
@@ -202,6 +209,15 @@ public class ValueDecoder {
                     return StringType.valueOf(value);
                 case "243": // color translation, fix regional
                 case "249": // settings
+                    // workaround for different number formats, this is to fix time>=1000s:
+                    // time is last block and may contain . and ,
+                    int sep = java.lang.Math.max(value.indexOf(" % "), value.indexOf(" K "));
+                    String time = value.substring(sep + 3);
+                    Matcher mt = TSD_SEPARATOR.matcher(time);
+                    if (mt.matches()) {
+                        int dp = time.indexOf(mt.group("sep"));
+                        value = value.substring(0, sep + dp + 3) + time.substring(dp + 1);
+                    }
                     return StringType.valueOf(value.replace(',', '.').replace(". ", ", "));
                 case "232":
                     return handleDpt232(value, subType);
@@ -211,7 +227,6 @@ public class ValueDecoder {
                     return handleDpt251(value, subType, preferredType);
                 default:
                     return handleNumericDpt(id, translator, preferredType);
-                // TODO 6.001 is mapped to PercentType, which can only cover 0-100%, not -128..127%
             }
         } catch (NumberFormatException | KNXFormatException | KNXIllegalArgumentException | ParseException e) {
             LOGGER.info("Translator couldn't parse data '{}' for datapoint type '{}' ({}).", data, dptId, e.getClass());
@@ -271,9 +286,6 @@ public class ValueDecoder {
     }
 
     private static Type handleDpt10(String value) throws ParseException {
-        // TODO check handling of DPT10: date is not set to current date, but 1970-01-01 + offset if day is given
-        // maybe we should change the semantics and use current date + offset if day is given
-
         // Calimero will provide either TIME_DAY_FORMAT or TIME_FORMAT, no-day is not printed
         Date date = null;
         try {
