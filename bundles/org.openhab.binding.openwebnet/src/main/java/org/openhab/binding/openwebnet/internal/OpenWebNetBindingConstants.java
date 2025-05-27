@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -141,22 +141,28 @@ public class OpenWebNetBindingConstants {
     public static final String CHANNEL_TEMPERATURE = "temperature";
     public static final String CHANNEL_FUNCTION = "function";
     public static final String CHANNEL_TEMP_SETPOINT = "setpointTemperature";
+    public static final String CHANNEL_TEMP_TARGET = "targetTemperature";
     public static final String CHANNEL_MODE = "mode";
     public static final String CHANNEL_FAN_SPEED = "speedFanCoil";
     public static final String CHANNEL_CONDITIONING_VALVES = "conditioningValves";
     public static final String CHANNEL_HEATING_VALVES = "heatingValves";
+    public static final String CHANNEL_HEATING = "heating";
+    public static final String CHANNEL_COOLING = "cooling";
     public static final String CHANNEL_ACTUATORS = "actuators";
     public static final String CHANNEL_LOCAL_OFFSET = "localOffset";
     public static final String CHANNEL_CU_REMOTE_CONTROL = "remoteControl";
     public static final String CHANNEL_CU_BATTERY_STATUS = "batteryStatus";
     public static final String CHANNEL_CU_WEEKLY_PROGRAM_NUMBER = "weeklyProgram";
     public static final String CHANNEL_CU_SCENARIO_PROGRAM_NUMBER = "scenarioProgram";
+    public static final String CHANNEL_CU_VACATION_DAYS = "vacationDays";
     public static final String CHANNEL_CU_FAILURE_DISCOVERED = "failureDiscovered";
     public static final String CHANNEL_CU_AT_LEAST_ONE_PROBE_OFF = "atLeastOneProbeOff";
     public static final String CHANNEL_CU_AT_LEAST_ONE_PROBE_PROTECTION = "atLeastOneProbeProtection";
     public static final String CHANNEL_CU_AT_LEAST_ONE_PROBE_MANUAL = "atLeastOneProbeManual";
     // energy management
     public static final String CHANNEL_POWER = "power";
+    public static final String CHANNEL_ENERGY_TOTALIZER_DAY = "energyToday";
+    public static final String CHANNEL_ENERGY_TOTALIZER_MONTH = "energyThisMonth";
     // scenario button channels
     public static final String CHANNEL_SCENARIO_BUTTON = "button#";
     public static final String CHANNEL_TYPE_CEN_BUTTON_EVENT = "cenButtonEvent";
@@ -180,6 +186,7 @@ public class OpenWebNetBindingConstants {
     public static final String CONFIG_PROPERTY_SHUTTER_RUN = "shutterRun";
     public static final String CONFIG_PROPERTY_SCENARIO_BUTTONS = "buttons";
     public static final String CONFIG_PROPERTY_STANDALONE = "standAlone";
+    public static final String CONFIG_PROPERTY_REFRESH_PERIOD = "energyRefreshPeriod";
 
     // gw config properties
     public static final String CONFIG_PROPERTY_HOST = "host";
