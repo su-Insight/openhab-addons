@@ -51,9 +51,9 @@ public class MeasureCapability extends CacheWeatherCapability {
     public MeasureCapability(CommonInterface handler, List<ChannelHelper> helpers) {
         super(handler, Duration.ofMinutes(30));
         MeasuresChannelHelper measureChannelHelper = (MeasuresChannelHelper) helpers.stream()
-                .filter(c -> c instanceof MeasuresChannelHelper).findFirst()
+                .filter(MeasuresChannelHelper.class::isInstance).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "MeasureCapability must find a MeasuresChannelHelper, please file a bug report."));
+                        "MeasureCapability needs a MeasuresChannelHelper, please file a bug report."));
         measureChannelHelper.setMeasures(measures);
     }
 
@@ -92,11 +92,11 @@ public class MeasureCapability extends CacheWeatherCapability {
     }
 
     @Override
-    protected List<NAObject> getFreshData(WeatherApi api) {
+    protected @Nullable NAObject getFreshData(WeatherApi api) {
         String bridgeId = handler.getBridgeId();
         String deviceId = bridgeId != null ? bridgeId : handler.getId();
         String moduleId = bridgeId != null ? handler.getId() : null;
         updateMeasures(api, deviceId, moduleId);
-        return List.of();
+        return null;
     }
 }
