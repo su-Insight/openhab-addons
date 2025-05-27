@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -25,7 +26,6 @@ import org.openhab.binding.netatmo.internal.api.NetatmoException;
 import org.openhab.binding.netatmo.internal.api.SecurityApi;
 import org.openhab.binding.netatmo.internal.api.data.NetatmoConstants.FeatureArea;
 import org.openhab.binding.netatmo.internal.api.data.NetatmoConstants.FloodLightMode;
-import org.openhab.binding.netatmo.internal.api.data.NetatmoConstants.SirenStatus;
 import org.openhab.binding.netatmo.internal.api.dto.HomeData;
 import org.openhab.binding.netatmo.internal.api.dto.HomeDataModule;
 import org.openhab.binding.netatmo.internal.api.dto.HomeDataPerson;
@@ -175,25 +175,25 @@ class SecurityCapability extends RestCapability<SecurityApi> {
     }
 
     private Collection<HomeEvent> requestDeviceEvents(String moduleId, String deviceType) {
-        return getApi().map(api -> {
+        return Objects.requireNonNull(getApi().map(api -> {
             try {
                 return api.getDeviceEvents(securityId, moduleId, deviceType);
             } catch (NetatmoException e) {
                 logger.warn("Error retrieving last events of camera '{}' : {}", moduleId, e.getMessage());
                 return null;
             }
-        }).orElse(List.of());
+        }).orElse(List.of()));
     }
 
     private Collection<HomeEvent> requestPersonEvents(String personId) {
-        return getApi().map(api -> {
+        return Objects.requireNonNull(getApi().map(api -> {
             try {
                 return api.getPersonEvents(securityId, personId);
             } catch (NetatmoException e) {
                 logger.warn("Error retrieving last events of person '{}' : {}", personId, e.getMessage());
                 return null;
             }
-        }).orElse(List.of());
+        }).orElse(List.of()));
     }
 
     public void setPersonAway(String personId, boolean away) {
@@ -233,17 +233,6 @@ class SecurityCapability extends RestCapability<SecurityApi> {
                 handler.expireData();
             } catch (NetatmoException e) {
                 logger.warn("Error changing Presence floodlight mode '{}' : {}", mode, e.getMessage());
-            }
-        });
-    }
-
-    public void changeSirenStatus(String moduleId, SirenStatus status) {
-        getApi().ifPresent(api -> {
-            try {
-                api.changeSirenStatus(handler.getId(), moduleId, status);
-                handler.expireData();
-            } catch (NetatmoException e) {
-                logger.warn("Error changing siren status '{}' : {}", status, e.getMessage());
             }
         });
     }
