@@ -328,7 +328,8 @@ public class ShellyChannelDefinitions {
         addChannel(thing, add, profile.settings.sleepTime != null, CHGR_SENSOR, CHANNEL_SENSOR_SLEEPTIME);
 
         // If device has more than 1 meter the channel accumulatedWatts receives the accumulated value
-        boolean accuChannel = profile.hasRelays && profile.numMeters > 1 && !profile.isRoller && !profile.isRGBW2;
+        boolean accuChannel = profile.is3EM
+                || (profile.hasRelays && profile.numMeters > 1 && !profile.isRoller && !profile.isRGBW2);
         addChannel(thing, add, accuChannel, CHGR_DEVST, CHANNEL_DEVST_ACCUWATTS);
         addChannel(thing, add, accuChannel, CHGR_DEVST, CHANNEL_DEVST_ACCUTOTAL);
         addChannel(thing, add, accuChannel && (status.emeters != null), CHGR_DEVST, CHANNEL_DEVST_ACCURETURNED);
@@ -368,6 +369,13 @@ public class ShellyChannelDefinitions {
             addChannel(thing, add, rs.autoOff != null, group, CHANNEL_TIMER_AUTOOFF);
         }
 
+        addAddonChannels(thing, profile, idx, add);
+
+        return add;
+    }
+
+    private static void addAddonChannels(final Thing thing, final ShellyDeviceProfile profile, int idx,
+            Map<String, Channel> add) {
         // Shelly 1/1PM and Plus 1/1PM Addon
         boolean addon = profile.settings.extSwitch != null && profile.settings.extSwitch.input0 != null
                 && idx == getInteger(profile.settings.extSwitch.input0.relayNum);
@@ -384,11 +392,10 @@ public class ShellyChannelDefinitions {
         }
         addChannel(thing, add, profile.status.extHumidity != null && profile.status.extHumidity.sensor1 != null,
                 CHGR_SENSOR, CHANNEL_ESENSOR_HUMIDITY);
+
         addChannel(thing, add, profile.status.extVoltage != null, CHGR_SENSOR, CHANNEL_ESENSOR_VOLTAGE);
         addChannel(thing, add, profile.status.extDigitalInput != null, CHGR_SENSOR, CHANNEL_ESENSOR_DIGITALINPUT);
         addChannel(thing, add, profile.status.extAnalogInput != null, CHGR_SENSOR, CHANNEL_ESENSOR_ANALOGINPUT);
-
-        return add;
     }
 
     public static Map<String, Channel> createDimmerChannels(final Thing thing, final ShellyDeviceProfile profile,
@@ -457,7 +464,8 @@ public class ShellyChannelDefinitions {
         return add;
     }
 
-    public static Map<String, Channel> createRollerChannels(Thing thing, final ShellyRollerStatus roller) {
+    public static Map<String, Channel> createRollerChannels(final Thing thing, final ShellyDeviceProfile profile,
+            final ShellyRollerStatus roller) {
         Map<String, Channel> add = new LinkedHashMap<>();
         addChannel(thing, add, true, CHGR_ROLLER, CHANNEL_ROL_CONTROL_CONTROL);
         addChannel(thing, add, true, CHGR_ROLLER, CHANNEL_ROL_CONTROL_STATE);
@@ -473,6 +481,9 @@ public class ShellyChannelDefinitions {
                 addChannel(thing, add, roller.currentPos != null, CHGR_ROLLER, CHANNEL_ROL_CONTROL_FAV);
             }
         }
+
+        addAddonChannels(thing, profile, 0, add);
+
         return add;
     }
 
