@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -90,7 +90,7 @@ public class JdbcMysqlDAO extends JdbcBaseDAO {
         this.dbMeta = dbMeta;
         // Initialize sqlTypes, depending on DB version for example
         if (dbMeta.isDbVersionGreater(5, 5)) {
-            sqlTypes.put("DATETIMEITEM", "TIMESTAMP(3)");
+            sqlTypes.put("DATETIMEITEM", "DATETIME(3)");
             sqlTypes.put("tablePrimaryKey", "TIMESTAMP(3)");
             sqlTypes.put("tablePrimaryValue", "NOW(3)");
         }
