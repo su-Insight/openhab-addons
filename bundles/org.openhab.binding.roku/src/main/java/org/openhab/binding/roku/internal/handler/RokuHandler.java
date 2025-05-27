@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -205,6 +205,8 @@ public class RokuHandler extends BaseThingHandler {
                     } else {
                         updateState(TIME_TOTAL, UnDefType.UNDEF);
                     }
+                } catch (NumberFormatException e) {
+                    logger.debug("Unable to parse playerInfo integer value. Exception: {}", e.getMessage());
                 } catch (RokuHttpException e) {
                     logger.debug("Unable to retrieve Roku media-player info. Exception: {}", e.getMessage(), e);
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
