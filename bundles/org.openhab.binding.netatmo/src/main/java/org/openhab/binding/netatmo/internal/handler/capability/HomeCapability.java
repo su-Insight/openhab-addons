@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -32,6 +32,7 @@ import org.openhab.binding.netatmo.internal.api.dto.NAObject;
 import org.openhab.binding.netatmo.internal.config.HomeConfiguration;
 import org.openhab.binding.netatmo.internal.handler.CommonInterface;
 import org.openhab.binding.netatmo.internal.providers.NetatmoDescriptionProvider;
+import org.openhab.core.thing.Bridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class HomeCapability extends RestCapability<HomeApi> {
     private final Logger logger = LoggerFactory.getLogger(HomeCapability.class);
     private final Set<FeatureArea> featureAreas = new HashSet<>();
     private final NetatmoDescriptionProvider descriptionProvider;
-    private final Set<String> homeIds = new HashSet<>();
+    private final Set<String> homeIds = new HashSet<>(3);
 
     public HomeCapability(CommonInterface handler, NetatmoDescriptionProvider descriptionProvider) {
         super(handler, HomeApi.class);
@@ -57,13 +58,19 @@ public class HomeCapability extends RestCapability<HomeApi> {
     @Override
     public void initialize() {
         super.initialize();
-        HomeConfiguration config = handler.getConfiguration().as(HomeConfiguration.class);
+        HomeConfiguration config = handler.getThingConfigAs(HomeConfiguration.class);
         homeIds.add(config.getId());
         if (!config.energyId.isBlank()) {
             homeIds.add(config.energyId);
         }
         if (!config.securityId.isBlank()) {
             homeIds.add(config.securityId);
+        }
+        if (hasArea(FeatureArea.SECURITY) && !handler.getCapabilities().containsKey(SecurityCapability.class)) {
+            handler.getCapabilities().put(new SecurityCapability(handler));
+        }
+        if (hasArea(FeatureArea.ENERGY) && !handler.getCapabilities().containsKey(EnergyCapability.class)) {
+            handler.getCapabilities().put(new EnergyCapability(handler, descriptionProvider));
         }
     }
 
@@ -75,12 +82,6 @@ public class HomeCapability extends RestCapability<HomeApi> {
 
     @Override
     protected void updateHomeData(HomeData home) {
-        if (hasArea(FeatureArea.SECURITY) && !handler.getCapabilities().containsKey(SecurityCapability.class)) {
-            handler.getCapabilities().put(new SecurityCapability(handler));
-        }
-        if (hasArea(FeatureArea.ENERGY) && !handler.getCapabilities().containsKey(EnergyCapability.class)) {
-            handler.getCapabilities().put(new EnergyCapability(handler, descriptionProvider));
-        }
         if (firstLaunch) {
             home.getCountry().map(country -> properties.put(PROPERTY_COUNTRY, country));
             home.getTimezone().map(tz -> properties.put(PROPERTY_TIMEZONE, tz));
@@ -92,23 +93,27 @@ public class HomeCapability extends RestCapability<HomeApi> {
 
     @Override
     protected void afterNewData(@Nullable NAObject newData) {
-        super.afterNewData(newData);
         if (firstLaunch && !hasArea(FeatureArea.SECURITY)) {
             handler.removeChannels(thing.getChannelsOfGroup(GROUP_SECURITY));
         }
         if (firstLaunch && !hasArea(FeatureArea.ENERGY)) {
             handler.removeChannels(thing.getChannelsOfGroup(GROUP_ENERGY));
         }
+        super.afterNewData(newData);
     }
 
     private boolean hasArea(FeatureArea searched) {
         return featureAreas.contains(searched);
     }
 
+    /**
+     * Errored equipments are reported at home level - so we need to explore all the tree to identify modules
+     * depending from a child device.
+     */
     @Override
     protected void updateErrors(NAError error) {
-        handler.getActiveChildren().stream().filter(handler -> handler.getId().equals(error.getId())).findFirst()
-                .ifPresent(handler -> handler.setNewData(error));
+        handler.getAllActiveChildren((Bridge) thing).stream().filter(handler -> handler.getId().equals(error.getId()))
+                .findFirst().ifPresent(handler -> handler.setNewData(error));
     }
 
     @Override
@@ -123,11 +128,11 @@ public class HomeCapability extends RestCapability<HomeApi> {
                 }
 
                 api.getHomeStatus(id).ifPresent(body -> {
-                    body.getHomeStatus().ifPresent(homeStatus -> result.add(homeStatus));
+                    body.getHomeStatus().ifPresent(result::add);
                     result.addAll(body.getErrors());
                 });
             } catch (NetatmoException e) {
-                logger.warn("Error getting Home informations : {}", e.getMessage());
+                logger.warn("Error getting Home informations: {}", e.getMessage());
             }
         });
         return result;

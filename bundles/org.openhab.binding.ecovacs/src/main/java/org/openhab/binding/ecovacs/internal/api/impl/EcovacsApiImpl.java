@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -345,13 +345,18 @@ public final class EcovacsApiImpl implements EcovacsApi {
     }
 
     private <T> T handleResponse(ContentResponse response, Class<T> clazz) throws EcovacsApiException {
-        @Nullable
-        T respObject = gson.fromJson(response.getContentAsString(), clazz);
-        if (respObject == null) {
-            // should not happen in practice
-            throw new EcovacsApiException("No response received");
+        try {
+            @Nullable
+            T respObject = gson.fromJson(response.getContentAsString(), clazz);
+            if (respObject == null) {
+                // should not happen in practice
+                throw new EcovacsApiException("No response received");
+            }
+            return respObject;
+        } catch (JsonSyntaxException e) {
+            throw new EcovacsApiException("Failed to parse response '" + response.getContentAsString()
+                    + "' as data class " + clazz.getSimpleName(), e);
         }
-        return respObject;
     }
 
     private Request createAuthRequest(String url, String clientKey, String clientSecret,
