@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -81,6 +81,11 @@ public class X1HybridG4InverterData extends CommonInverterData {
     @Override
     public short getPV2Power() {
         return getData(9);
+    }
+
+    @Override
+    public short getInverterWorkModeCode() {
+        return getData(10);
     }
 
     @Override

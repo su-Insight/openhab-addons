@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -36,7 +36,7 @@ public class X1HybridG4DataParser implements RawDataParser {
             CHANNEL_INVERTER_PV_TOTAL_CURRENT, CHANNEL_BATTERY_POWER, CHANNEL_BATTERY_VOLTAGE, CHANNEL_BATTERY_CURRENT,
             CHANNEL_BATTERY_TEMPERATURE, CHANNEL_BATTERY_STATE_OF_CHARGE, CHANNEL_FEED_IN_POWER, CHANNEL_TIMESTAMP,
             CHANNEL_RAW_DATA, CHANNEL_INVERTER_OUTPUT_POWER, CHANNEL_INVERTER_OUTPUT_CURRENT,
-            CHANNEL_INVERTER_OUTPUT_VOLTAGE, CHANNEL_INVERTER_OUTPUT_FREQUENCY);
+            CHANNEL_INVERTER_OUTPUT_VOLTAGE, CHANNEL_INVERTER_OUTPUT_FREQUENCY, CHANNEL_INVERTER_WORKMODE);
 
     @Override
     public InverterData getData(LocalConnectRawDataBean rawData) {

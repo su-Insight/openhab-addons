@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -68,6 +68,9 @@ public class TestX1HybridG4Parser {
         assertEquals(0.1, data.getPV2Current()); // [7]
         assertEquals(487, data.getPV1Power()); // [8]
         assertEquals(65, data.getPV2Power()); // [9]
+
+        assertEquals(2, data.getInverterWorkModeCode()); // [10]
+        assertEquals("2", data.getInverterWorkMode()); // [10]
 
         assertEquals(121.8, data.getBatteryVoltage()); // [14]
         assertEquals(5, data.getBatteryCurrent()); // [15]

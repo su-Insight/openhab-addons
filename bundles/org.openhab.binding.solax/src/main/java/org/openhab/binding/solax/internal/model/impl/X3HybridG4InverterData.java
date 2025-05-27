@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -123,6 +123,11 @@ public class X3HybridG4InverterData extends CommonInverterData {
     @Override
     public double getFrequencyPhase3() {
         return ((double) getData(18)) / 100;
+    }
+
+    @Override
+    public short getInverterWorkModeCode() {
+        return getData(19);
     }
 
     // Battery

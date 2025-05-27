@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -26,7 +26,7 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class SolaxBindingConstants {
 
-    private static final String BINDING_ID = "solax";
+    protected static final String BINDING_ID = "solax";
     private static final String THING_LOCAL_CONNECT_INVERTER_ID = "local-connect-inverter";
 
     // List of all Thing Type UIDs
@@ -61,6 +61,9 @@ public class SolaxBindingConstants {
     public static final String CHANNEL_INVERTER_OUTPUT_FREQUENCY_PHASE1 = "inverter-frequency-phase1";
     public static final String CHANNEL_INVERTER_OUTPUT_FREQUENCY_PHASE2 = "inverter-frequency-phase2";
     public static final String CHANNEL_INVERTER_OUTPUT_FREQUENCY_PHASE3 = "inverter-frequency-phase3";
+    public static final String CHANNEL_INVERTER_TEMPERATURE1 = "inverter-temperature1";
+    public static final String CHANNEL_INVERTER_TEMPERATURE2 = "inverter-temperature2";
+    public static final String CHANNEL_INVERTER_WORKMODE = "inverter-workmode";
 
     // Generic
     public static final String CHANNEL_INVERTER_PV1_POWER = "pv1-power";

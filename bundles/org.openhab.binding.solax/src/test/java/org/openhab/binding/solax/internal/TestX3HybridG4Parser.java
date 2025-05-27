@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -88,6 +88,9 @@ public class TestX3HybridG4Parser {
         assertEquals(49.96, data.getFrequencyPhase1()); // [16]
         assertEquals(49.96, data.getFrequencyPhase2()); // [17]
         assertEquals(49.96, data.getFrequencyPhase3()); // [18]
+
+        assertEquals(2, data.getInverterWorkModeCode()); // [19]
+        assertEquals("2", data.getInverterWorkMode()); // [19]
 
         assertEquals(-41, data.getFeedInPower()); // [34] - [35]
 
