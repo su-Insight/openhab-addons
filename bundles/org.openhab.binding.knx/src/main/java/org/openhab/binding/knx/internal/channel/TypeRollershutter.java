@@ -24,8 +24,8 @@ import org.openhab.core.library.types.StopMoveType;
 import org.openhab.core.library.types.UpDownType;
 import org.openhab.core.thing.Channel;
 
-import tuwien.auto.calimero.dptxlator.DPTXlator8BitUnsigned;
-import tuwien.auto.calimero.dptxlator.DPTXlatorBoolean;
+import io.calimero.dptxlator.DPTXlator8BitUnsigned;
+import io.calimero.dptxlator.DPTXlatorBoolean;
 
 /**
  * rollershutter channel type description
@@ -39,7 +39,7 @@ class TypeRollershutter extends KNXChannel {
             CHANNEL_ROLLERSHUTTER_CONTROL);
 
     TypeRollershutter(Channel channel) {
-        super(Set.of(UP_DOWN_GA, STOP_MOVE_GA, POSITION_GA),
+        super(List.of(UP_DOWN_GA, STOP_MOVE_GA, POSITION_GA),
                 List.of(PercentType.class, UpDownType.class, StopMoveType.class), channel);
     }
 

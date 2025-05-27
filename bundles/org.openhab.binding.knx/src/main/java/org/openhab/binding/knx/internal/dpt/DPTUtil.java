@@ -33,11 +33,11 @@ import org.openhab.core.types.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tuwien.auto.calimero.dptxlator.DPTXlator3BitControlled;
-import tuwien.auto.calimero.dptxlator.DPTXlator8BitSigned;
-import tuwien.auto.calimero.dptxlator.DPTXlator8BitUnsigned;
-import tuwien.auto.calimero.dptxlator.DPTXlatorBoolean;
-import tuwien.auto.calimero.dptxlator.DPTXlatorString;
+import io.calimero.dptxlator.DPTXlator3BitControlled;
+import io.calimero.dptxlator.DPTXlator8BitSigned;
+import io.calimero.dptxlator.DPTXlator8BitUnsigned;
+import io.calimero.dptxlator.DPTXlatorBoolean;
+import io.calimero.dptxlator.DPTXlatorString;
 
 /**
  * This class provides support to determine compatibility between KNX DPTs and openHAB data types
@@ -64,7 +64,7 @@ public class DPTUtil {
             Map.entry("3", Set.of(IncreaseDecreaseType.class)), //
             Map.entry("4", Set.of(StringType.class)), //
             Map.entry("5", Set.of(QuantityType.class, DecimalType.class)), //
-            Map.entry("6", Set.of(QuantityType.class, DecimalType.class)), //
+            Map.entry("6", Set.of(QuantityType.class, DecimalType.class, StringType.class)), //
             Map.entry("7", Set.of(QuantityType.class, DecimalType.class)), //
             Map.entry("8", Set.of(QuantityType.class, DecimalType.class)), //
             Map.entry("9", Set.of(QuantityType.class, DecimalType.class)), //
