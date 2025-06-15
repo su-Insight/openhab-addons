@@ -10,25 +10,27 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.awattar.internal;
+package org.openhab.binding.siemenshvac.internal.type;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
- * Stores the bestprice config
  *
- * @author Wolfgang Klimt - initial contribution
+ * An exception that occurred while operating the binding
+ *
+ * @author Laurent Arnal - Initial contribution
+ *
  */
+
 @NonNullByDefault
-public class AwattarBestpriceConfiguration {
+public class SiemensHvacException extends Exception {
+    private static final long serialVersionUID = -3398100220952729816L;
 
-    public int rangeStart;
-    public int rangeDuration;
-    public int length;
-    public boolean consecutive;
+    public SiemensHvacException(String message, Exception e) {
+        super(message, e);
+    }
 
-    @Override
-    public String toString() {
-        return String.format("{ s: %d, d: %d, l: %d, c: %b )", rangeStart, rangeDuration, length, consecutive);
+    public SiemensHvacException(String message) {
+        super(message);
     }
 }
