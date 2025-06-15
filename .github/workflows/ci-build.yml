@@ -26,11 +26,11 @@ jobs:
     steps:
       - name: Checkout
         if: github.head_ref == ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Checkout merge
         if: github.head_ref != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           ref: refs/pull/${{github.event.pull_request.number}}/merge
 
@@ -45,13 +45,13 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Set up Java ${{ matrix.java }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Set up Maven ${{ matrix.maven }}
-        uses: stCarolas/setup-maven@v5
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
         with:
           maven-version: ${{ matrix.maven }}
 
@@ -64,7 +64,7 @@ jobs:
       - name: Get Changed Files
         if: github.head_ref != ''
         id: files
-        uses: Ana06/get-changed-files@v2.2.0
+        uses: Ana06/get-changed-files@e0c398b7065a8d84700c471b6afc4116d1ba4e96
         with:
           format: 'csv'
 
@@ -95,7 +95,7 @@ jobs:
 
       - name: Report SAT Errors as Annotations
         if: ${{ matrix.java == '17' && always() && ((steps.build.outcome == 'success') || (steps.build.outcome == 'failure')) }}
-        uses: ghys/checkstyle-github-action@main
+        uses: ghys/checkstyle-github-action@bd34573c2add8a11e78be993ca937a7bb2e97d05
         with:
           title: CheckStyle Violations
           path: '**/checkstyle-result.xml'
