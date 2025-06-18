@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.measure.Quantity;
 import javax.measure.Unit;
@@ -50,6 +51,7 @@ import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StopMoveType;
 import org.openhab.core.library.types.StringType;
+import org.openhab.core.library.types.UpDownType;
 import org.openhab.core.library.unit.ImperialUnits;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
@@ -186,6 +188,26 @@ import io.github.hapjava.characteristics.impl.windowcovering.TargetVerticalTiltA
  */
 @NonNullByDefault
 public class HomekitCharacteristicFactory {
+    // These values represent ranges that do not match the defaults that are part of
+    // the HAP specification/the defaults in HAP-Java, but nonetheless are commonly
+    // encountered in consumer-grade devices. So we define our own default min/max so
+    // that users don't have to override the default unnecessarily.
+
+    // HAP default is 50-400 mired/2500-20,000 K. These numbers represent
+    // the warmest and coolest bulbs I could reasonably find at general
+    // purpose retailers.
+    public static final int COLOR_TEMPERATURE_MIN_MIREDS = 107; // 9300 K
+    public static final int COLOR_TEMPERATURE_MAX_MIREDS = 556; // 1800 K
+    // HAP default is 0 °C, but it's very common for outdoor temperatures and/or
+    // refrigation devices to go below freezing.
+    // Lowest recorded temperature on Earth is -89.2 °C. This is just a nice round number.
+    public static final int CURRENT_TEMPERATURE_MIN_CELSIUS = -100;
+    // HAP default is 0.0001 lx, but this is commonly rounded to 0 by many devices
+    public static final int CURRENT_AMBIENT_LIGHT_LEVEL_MIN_LUX = 0;
+    // HAP default is 100k
+    // https://en.wikipedia.org/wiki/Daylight#Intensity_in_different_conditions
+    public static final int CURRENT_AMBIENT_LIGHT_LEVEL_MAX_LUX = 120000;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(HomekitCharacteristicFactory.class);
 
     // List of optional characteristics and corresponding method to create them.
@@ -328,9 +350,9 @@ public class HomekitCharacteristicFactory {
      *            associated with, which has already been set.
      * @return
      */
-    public static <T extends Enum<T> & CharacteristicEnum> Map<T, String> createMapping(HomekitTaggedItem item,
+    public static <T extends Enum<T> & CharacteristicEnum> Map<T, Object> createMapping(HomekitTaggedItem item,
             Class<T> klazz, @Nullable List<T> customEnumList, boolean inverted) {
-        EnumMap<T, String> map = new EnumMap(klazz);
+        EnumMap<T, Object> map = new EnumMap(klazz);
         var dataTypes = item.getBaseItem().getAcceptedDataTypes();
         boolean switchType = dataTypes.contains(OnOffType.class);
         boolean contactType = dataTypes.contains(OpenClosedType.class);
@@ -378,9 +400,22 @@ public class HomekitCharacteristicFactory {
         }
         if (configuration != null && !configuration.isEmpty()) {
             map.forEach((k, current_value) -> {
-                final Object newValue = configuration.get(k.toString());
-                if (newValue instanceof String || newValue instanceof Number) {
-                    map.put(k, newValue.toString());
+                Object newValue = configuration.get(k.toString());
+                if (newValue instanceof String || newValue instanceof Number || newValue instanceof List) {
+                    if (newValue instanceof Number) {
+                        newValue = newValue.toString();
+                    } else if (newValue instanceof List listValue) {
+                        newValue = listValue.stream().map(v -> {
+                            // they probably put "NULL" in the YAML in MainUI;
+                            // and they meant it as a string to match the UnDefType.NULL
+                            if (v == null) {
+                                return "NULL";
+                            } else {
+                                return v.toString();
+                            }
+                        }).collect(Collectors.toList());
+                    }
+                    map.put(k, Objects.requireNonNull(newValue));
                     if (customEnumList != null) {
                         customEnumList.add(k);
                     }
@@ -401,17 +436,17 @@ public class HomekitCharacteristicFactory {
         return map;
     }
 
-    public static <T extends Enum<T> & CharacteristicEnum> Map<T, String> createMapping(HomekitTaggedItem item,
+    public static <T extends Enum<T> & CharacteristicEnum> Map<T, Object> createMapping(HomekitTaggedItem item,
             Class<T> klazz) {
         return createMapping(item, klazz, null, false);
     }
 
-    public static <T extends Enum<T> & CharacteristicEnum> Map<T, String> createMapping(HomekitTaggedItem item,
+    public static <T extends Enum<T> & CharacteristicEnum> Map<T, Object> createMapping(HomekitTaggedItem item,
             Class<T> klazz, @Nullable List<T> customEnumList) {
         return createMapping(item, klazz, customEnumList, false);
     }
 
-    public static <T extends Enum<T> & CharacteristicEnum> Map<T, String> createMapping(HomekitTaggedItem item,
+    public static <T extends Enum<T> & CharacteristicEnum> Map<T, Object> createMapping(HomekitTaggedItem item,
             Class<T> klazz, boolean inverted) {
         return createMapping(item, klazz, null, inverted);
     }
@@ -426,7 +461,7 @@ public class HomekitCharacteristicFactory {
      * @param <T> type of the result derived from
      * @return key for the value
      */
-    public static <T> T getKeyFromMapping(HomekitTaggedItem item, State state, Map<T, String> mapping, T defaultValue) {
+    public static <T> T getKeyFromMapping(HomekitTaggedItem item, State state, Map<T, Object> mapping, T defaultValue) {
         LOGGER.trace("getKeyFromMapping: characteristic {}, state {}, mapping {}", item.getAccessoryType().getTag(),
                 state, mapping);
 
@@ -449,14 +484,23 @@ public class HomekitCharacteristicFactory {
             return defaultValue;
         }
 
-        return mapping.entrySet().stream().filter(entry -> value.equalsIgnoreCase(entry.getValue())).findAny()
-                .map(Map.Entry::getKey).orElseGet(() -> {
-                    LOGGER.warn(
-                            "Wrong value {} for {} characteristic of the item {}. Expected one of following {}. Returning {}.",
-                            state.toString(), item.getAccessoryType().getTag(), item.getName(), mapping.values(),
-                            defaultValue);
-                    return defaultValue;
-                });
+        return mapping.entrySet().stream().filter(entry -> {
+            Object mappingValue = entry.getValue();
+            if (mappingValue instanceof String stringValue) {
+                return value.equalsIgnoreCase(stringValue);
+            } else if (mappingValue instanceof List listValue) {
+                return listValue.stream().filter(listEntry -> value.equalsIgnoreCase(listEntry.toString())).findAny()
+                        .isPresent();
+            } else {
+                LOGGER.warn("Found unexpected enum value type {}; this is a bug.", mappingValue.getClass());
+                return false;
+            }
+        }).findAny().map(Map.Entry::getKey).orElseGet(() -> {
+            LOGGER.warn(
+                    "Wrong value {} for {} characteristic of the item {}. Expected one of following {}. Returning {}.",
+                    state.toString(), item.getAccessoryType().getTag(), item.getName(), mapping.values(), defaultValue);
+            return defaultValue;
+        });
     }
 
     // supporting methods
@@ -481,18 +525,31 @@ public class HomekitCharacteristicFactory {
     }
 
     private static <T extends CharacteristicEnum> CompletableFuture<T> getEnumFromItem(HomekitTaggedItem item,
-            Map<T, String> mapping, T defaultValue) {
+            Map<T, Object> mapping, T defaultValue) {
         return CompletableFuture
                 .completedFuture(getKeyFromMapping(item, item.getItem().getState(), mapping, defaultValue));
     }
 
-    public static <T extends Enum<T>> void setValueFromEnum(HomekitTaggedItem taggedItem, T value, Map<T, String> map) {
+    public static <T extends Enum<T>> void setValueFromEnum(HomekitTaggedItem taggedItem, T value, Map<T, Object> map) {
+        Object mapValue = map.get(value);
+        // if the mapping has multiple values for this enum, just use the first one for the command sent to the item
+        if (mapValue instanceof List listValue) {
+            if (listValue.isEmpty()) {
+                mapValue = null;
+            } else {
+                mapValue = listValue.get(0);
+            }
+        }
+        if (mapValue == null) {
+            LOGGER.warn("Unable to find mapping value for {} for item {}", value, taggedItem.getName());
+            return;
+        }
         if (taggedItem.getBaseItem() instanceof NumberItem) {
-            taggedItem.send(new DecimalType(Objects.requireNonNull(map.get(value))));
+            taggedItem.send(new DecimalType(mapValue.toString()));
         } else if (taggedItem.getBaseItem() instanceof SwitchItem) {
-            taggedItem.send(OnOffType.from(Objects.requireNonNull(map.get(value))));
+            taggedItem.send(OnOffType.from(mapValue.toString()));
         } else {
-            taggedItem.send(new StringType(map.get(value)));
+            taggedItem.send(new StringType(mapValue.toString()));
         }
     }
 
@@ -551,11 +608,6 @@ public class HomekitCharacteristicFactory {
 
     public static double convertFromCelsius(double degrees) {
         return convertAndRound(degrees, SIUnits.CELSIUS, getSystemTemperatureUnit());
-    }
-
-    public static double getTemperatureStep(HomekitTaggedItem taggedItem, double defaultValue) {
-        return taggedItem.getConfigurationAsQuantity(HomekitTaggedItem.STEP,
-                new QuantityType(defaultValue, SIUnits.CELSIUS), true).doubleValue();
     }
 
     private static Supplier<CompletableFuture<Integer>> getAngleSupplier(HomekitTaggedItem taggedItem,
@@ -759,14 +811,10 @@ public class HomekitCharacteristicFactory {
             HomekitAccessoryUpdater updater) {
         final boolean inverted = taggedItem.isInverted();
 
-        int minValue = taggedItem
-                .getConfigurationAsQuantity(HomekitTaggedItem.MIN_VALUE,
-                        new QuantityType(ColorTemperatureCharacteristic.DEFAULT_MIN_VALUE, Units.MIRED), false)
-                .intValue();
-        int maxValue = taggedItem
-                .getConfigurationAsQuantity(HomekitTaggedItem.MAX_VALUE,
-                        new QuantityType(ColorTemperatureCharacteristic.DEFAULT_MAX_VALUE, Units.MIRED), false)
-                .intValue();
+        int minValue = taggedItem.getConfigurationAsQuantity(HomekitTaggedItem.MIN_VALUE,
+                new QuantityType(COLOR_TEMPERATURE_MIN_MIREDS, Units.MIRED), false).intValue();
+        int maxValue = taggedItem.getConfigurationAsQuantity(HomekitTaggedItem.MAX_VALUE,
+                new QuantityType(COLOR_TEMPERATURE_MAX_MIREDS, Units.MIRED), false).intValue();
 
         // It's common to swap these if you're providing in Kelvin instead of mired
         if (minValue > maxValue) {
@@ -846,7 +894,7 @@ public class HomekitCharacteristicFactory {
                         Objects.requireNonNull(new QuantityType(CoolingThresholdTemperatureCharacteristic.DEFAULT_STEP,
                                 SIUnits.CELSIUS).toUnit(getSystemTemperatureUnit())),
                         true)
-                .toUnit(SIUnits.CELSIUS).doubleValue();
+                .toUnitRelative(SIUnits.CELSIUS).doubleValue();
         return new CoolingThresholdTemperatureCharacteristic(minValue, maxValue, step,
                 getTemperatureSupplier(taggedItem, minValue), setTemperatureConsumer(taggedItem),
                 getSubscriber(taggedItem, COOLING_THRESHOLD_TEMPERATURE, updater),
@@ -855,11 +903,23 @@ public class HomekitCharacteristicFactory {
 
     private static CurrentDoorStateCharacteristic createCurrentDoorStateCharacteristic(HomekitTaggedItem taggedItem,
             HomekitAccessoryUpdater updater) {
-        List<CurrentDoorStateEnum> validValues = new ArrayList<>();
-        var map = createMapping(taggedItem, CurrentDoorStateEnum.class, validValues);
-        return new CurrentDoorStateCharacteristic(() -> getEnumFromItem(taggedItem, map, CurrentDoorStateEnum.CLOSED),
-                getSubscriber(taggedItem, CURRENT_DOOR_STATE, updater),
-                getUnsubscriber(taggedItem, CURRENT_DOOR_STATE, updater));
+        if (taggedItem.getBaseItem() instanceof RollershutterItem) {
+            return new CurrentDoorStateCharacteristic(() -> {
+                if (taggedItem.getItem().getState() instanceof PercentType percentType
+                        && percentType.equals(PercentType.HUNDRED)) {
+                    return CompletableFuture.completedFuture(CurrentDoorStateEnum.CLOSED);
+                }
+                return CompletableFuture.completedFuture(CurrentDoorStateEnum.OPEN);
+            }, getSubscriber(taggedItem, CURRENT_DOOR_STATE, updater),
+                    getUnsubscriber(taggedItem, CURRENT_DOOR_STATE, updater));
+        } else {
+            List<CurrentDoorStateEnum> validValues = new ArrayList<>();
+            var map = createMapping(taggedItem, CurrentDoorStateEnum.class, validValues, true);
+            return new CurrentDoorStateCharacteristic(
+                    () -> getEnumFromItem(taggedItem, map, CurrentDoorStateEnum.CLOSED),
+                    getSubscriber(taggedItem, CURRENT_DOOR_STATE, updater),
+                    getUnsubscriber(taggedItem, CURRENT_DOOR_STATE, updater));
+        }
     }
 
     private static CurrentHeatingCoolingStateCharacteristic createCurrentHeatingCoolingStateCharacteristic(
@@ -898,13 +958,9 @@ public class HomekitCharacteristicFactory {
 
     private static CurrentTemperatureCharacteristic createCurrentTemperatureCharacteristic(HomekitTaggedItem taggedItem,
             HomekitAccessoryUpdater updater) {
-        double minValue = taggedItem
-                .getConfigurationAsQuantity(HomekitTaggedItem.MIN_VALUE,
-                        Objects.requireNonNull(
-                                new QuantityType(CurrentTemperatureCharacteristic.DEFAULT_MIN_VALUE, SIUnits.CELSIUS)
-                                        .toUnit(getSystemTemperatureUnit())),
-                        false)
-                .toUnit(SIUnits.CELSIUS).doubleValue();
+        double minValue = taggedItem.getConfigurationAsQuantity(HomekitTaggedItem.MIN_VALUE, Objects.requireNonNull(
+                new QuantityType(CURRENT_TEMPERATURE_MIN_CELSIUS, SIUnits.CELSIUS).toUnit(getSystemTemperatureUnit())),
+                false).toUnit(SIUnits.CELSIUS).doubleValue();
         double maxValue = taggedItem
                 .getConfigurationAsQuantity(HomekitTaggedItem.MAX_VALUE,
                         Objects.requireNonNull(
@@ -918,7 +974,7 @@ public class HomekitCharacteristicFactory {
                                 new QuantityType(CurrentTemperatureCharacteristic.DEFAULT_STEP, SIUnits.CELSIUS)
                                         .toUnit(getSystemTemperatureUnit())),
                         true)
-                .toUnit(SIUnits.CELSIUS).doubleValue();
+                .toUnitRelative(SIUnits.CELSIUS).doubleValue();
         return new CurrentTemperatureCharacteristic(minValue, maxValue, step,
                 getTemperatureSupplier(taggedItem, minValue), getSubscriber(taggedItem, TARGET_TEMPERATURE, updater),
                 getUnsubscriber(taggedItem, TARGET_TEMPERATURE, updater));
@@ -1012,7 +1068,7 @@ public class HomekitCharacteristicFactory {
                         Objects.requireNonNull(new QuantityType(HeatingThresholdTemperatureCharacteristic.DEFAULT_STEP,
                                 SIUnits.CELSIUS).toUnit(getSystemTemperatureUnit())),
                         true)
-                .toUnit(SIUnits.CELSIUS).doubleValue();
+                .toUnitRelative(SIUnits.CELSIUS).doubleValue();
         return new HeatingThresholdTemperatureCharacteristic(minValue, maxValue, step,
                 getTemperatureSupplier(taggedItem, minValue), setTemperatureConsumer(taggedItem),
                 getSubscriber(taggedItem, HEATING_THRESHOLD_TEMPERATURE, updater),
@@ -1229,7 +1285,7 @@ public class HomekitCharacteristicFactory {
     private static ProgrammableSwitchEventCharacteristic createProgrammableSwitchEventCharacteristic(
             HomekitTaggedItem taggedItem, HomekitAccessoryUpdater updater) {
         // have to build the map custom, since SINGLE_PRESS starts at 0
-        Map<ProgrammableSwitchEnum, String> map = new EnumMap(ProgrammableSwitchEnum.class);
+        Map<ProgrammableSwitchEnum, Object> map = new EnumMap(ProgrammableSwitchEnum.class);
         List<ProgrammableSwitchEnum> validValues = new ArrayList<>();
 
         if (taggedItem.getBaseItem().getAcceptedDataTypes().contains(OnOffType.class)) {
@@ -1251,11 +1307,11 @@ public class HomekitCharacteristicFactory {
     private static class ProgrammableSwitchEventCharacteristicHelper {
         private @Nullable ProgrammableSwitchEnum lastValue = null;
         private final HomekitTaggedItem taggedItem;
-        private final Map<ProgrammableSwitchEnum, String> map;
+        private final Map<ProgrammableSwitchEnum, Object> map;
         private final HomekitAccessoryUpdater updater;
 
         ProgrammableSwitchEventCharacteristicHelper(HomekitTaggedItem taggedItem, HomekitAccessoryUpdater updater,
-                Map<ProgrammableSwitchEnum, String> map) {
+                Map<ProgrammableSwitchEnum, Object> map) {
             this.taggedItem = taggedItem;
             this.map = map;
             this.updater = updater;
@@ -1426,12 +1482,25 @@ public class HomekitCharacteristicFactory {
 
     private static TargetDoorStateCharacteristic createTargetDoorStateCharacteristic(HomekitTaggedItem taggedItem,
             HomekitAccessoryUpdater updater) {
-        List<TargetDoorStateEnum> validValues = new ArrayList<>();
-        var map = createMapping(taggedItem, TargetDoorStateEnum.class, validValues);
-        return new TargetDoorStateCharacteristic(() -> getEnumFromItem(taggedItem, map, TargetDoorStateEnum.CLOSED),
-                (targetState) -> setValueFromEnum(taggedItem, targetState, map),
-                getSubscriber(taggedItem, TARGET_DOOR_STATE, updater),
-                getUnsubscriber(taggedItem, TARGET_DOOR_STATE, updater));
+        if (taggedItem.getBaseItem() instanceof RollershutterItem) {
+            return new TargetDoorStateCharacteristic(() -> {
+                if (taggedItem.getItem().getState() instanceof PercentType percentType
+                        && percentType.equals(PercentType.HUNDRED)) {
+                    return CompletableFuture.completedFuture(TargetDoorStateEnum.CLOSED);
+                }
+                return CompletableFuture.completedFuture(TargetDoorStateEnum.OPEN);
+            }, (targetState) -> taggedItem
+                    .send(targetState.equals(TargetDoorStateEnum.OPEN) ? UpDownType.UP : UpDownType.DOWN),
+                    getSubscriber(taggedItem, TARGET_DOOR_STATE, updater),
+                    getUnsubscriber(taggedItem, TARGET_DOOR_STATE, updater));
+        } else {
+            List<TargetDoorStateEnum> validValues = new ArrayList<>();
+            var map = createMapping(taggedItem, TargetDoorStateEnum.class, validValues, true);
+            return new TargetDoorStateCharacteristic(() -> getEnumFromItem(taggedItem, map, TargetDoorStateEnum.CLOSED),
+                    (targetState) -> setValueFromEnum(taggedItem, targetState, map),
+                    getSubscriber(taggedItem, TARGET_DOOR_STATE, updater),
+                    getUnsubscriber(taggedItem, TARGET_DOOR_STATE, updater));
+        }
     }
 
     private static TargetFanStateCharacteristic createTargetFanStateCharacteristic(HomekitTaggedItem taggedItem,
@@ -1499,7 +1568,7 @@ public class HomekitCharacteristicFactory {
                                 new QuantityType(TargetTemperatureCharacteristic.DEFAULT_STEP, SIUnits.CELSIUS)
                                         .toUnit(getSystemTemperatureUnit())),
                         true)
-                .toUnit(SIUnits.CELSIUS).doubleValue();
+                .toUnitRelative(SIUnits.CELSIUS).doubleValue();
         return new TargetTemperatureCharacteristic(minValue, maxValue, step,
                 getTemperatureSupplier(taggedItem, minValue), setTemperatureConsumer(taggedItem),
                 getSubscriber(taggedItem, TARGET_TEMPERATURE, updater),

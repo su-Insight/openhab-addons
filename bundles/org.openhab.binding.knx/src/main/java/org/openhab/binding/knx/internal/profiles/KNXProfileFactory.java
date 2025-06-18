@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -86,12 +86,10 @@ public class KNXProfileFactory implements ProfileFactory, ProfileAdvisor, Profil
     private @Nullable ProfileTypeUID getSuggestedProfileTypeUID(@Nullable ChannelTypeUID channelTypeUID,
             @Nullable String itemType) {
         if (KNXBindingConstants.CHANNEL_CONTACT_CONTROL_UID.equals(channelTypeUID) && itemType != null) {
-            switch (itemType) {
-                case CoreItemFactory.CONTACT:
-                    return UID_CONTACT_CONTROL;
-                default:
-                    return null;
-            }
+            return switch (itemType) {
+                case CoreItemFactory.CONTACT -> UID_CONTACT_CONTROL;
+                default -> null;
+            };
         }
         return null;
     }

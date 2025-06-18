@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -56,11 +56,10 @@ public class KNXContactControlProfile implements StateProfile {
         ChannelUID linkedChannelUID = callback.getItemChannelLink().getLinkedUID();
         logger.trace("onStateUpdateFromItem({}) to {}", state.toString(), linkedChannelUID);
 
-        if (!(state instanceof Command)) {
+        if (!(state instanceof Command command)) {
             logger.debug("The given state {} could not be transformed to a command", state);
             return;
         }
-        Command command = (Command) state;
 
         // this does not have effect for contact items
         // callback.handleCommand(command);
