@@ -15,6 +15,7 @@ package org.openhab.binding.hue.internal.api.dto.clip2.helper;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,6 +60,16 @@ import org.openhab.core.util.ColorUtil.Gamut;
 public class Setters {
 
     private static final Set<ResourceType> LIGHT_TYPES = Set.of(ResourceType.LIGHT, ResourceType.GROUPED_LIGHT);
+
+    /*
+     * Comparator to sort Resources so that scene activation resources come last.
+     */
+    private static final Comparator<Resource> SCENE_ACTIVE_COMPARATOR = new Comparator<>() {
+        @Override
+        public int compare(Resource r1, Resource r2) {
+            return (r1.getSceneActive().orElse(false) ? 1 : 0) + (r2.getSceneActive().orElse(false) ? -1 : 0);
+        }
+    };
 
     /**
      * Setter for Alert field:
@@ -398,7 +409,18 @@ public class Setters {
                 iterator.remove();
             }
         }
+        return resources;
+    }
 
+    /**
+     * Sort a list of resources so that scene activation event resources (if any) get
+     * processed after scene de-activation event resources (if any).
+     *
+     * @param resources list of resources to be sorted.
+     * @return the sorted list with scene activation event resources moved to the end.
+     */
+    public static List<Resource> sortSceneResources(List<Resource> resources) {
+        resources.sort(SCENE_ACTIVE_COMPARATOR);
         return resources;
     }
 }
