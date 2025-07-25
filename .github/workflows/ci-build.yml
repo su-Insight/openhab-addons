@@ -64,7 +64,7 @@ jobs:
       - name: Get Changed Files
         if: github.head_ref != ''
         id: files
-        uses: Ana06/get-changed-files@v2.2.0
+        uses: Ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
         with:
           format: 'csv'
 
