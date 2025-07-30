@@ -26,11 +26,11 @@ jobs:
     steps:
       - name: Checkout
         if: github.head_ref == ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
 
       - name: Checkout merge
         if: github.head_ref != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           ref: refs/pull/${{github.event.pull_request.number}}/merge
 
@@ -45,21 +45,21 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Set up Java ${{ matrix.java }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
         if: ${{ matrix.java != 'profile-j21' }}
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Set up Java ${{ matrix.java }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
         if: ${{ matrix.java == 'profile-j21' }}
         with:
           distribution: 'temurin'
           java-version: ${{ 21 }}
 
       - name: Set up Maven ${{ matrix.maven }}
-        uses: stCarolas/setup-maven@v5
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
         with:
           maven-version: ${{ matrix.maven }}
 
@@ -72,7 +72,7 @@ jobs:
       - name: Get Changed Files
         if: github.head_ref != ''
         id: files
-        uses: Ana06/get-changed-files@v2.3.0
+        uses: Ana06/get-changed-files@25f79e676e7ea1868813e21465014798211fad8c
         with:
           format: 'csv'
 
@@ -116,7 +116,7 @@ jobs:
 
       - name: Report SAT Errors as Annotations
         if: ${{ matrix.java == '17' && always() && ((steps.build.outcome == 'success') || (steps.build.outcome == 'failure')) }}
-        uses: ghys/checkstyle-github-action@main
+        uses: ghys/checkstyle-github-action@bd34573c2add8a11e78be993ca937a7bb2e97d05
         with:
           title: CheckStyle Violations
           path: '**/checkstyle-result.xml'
