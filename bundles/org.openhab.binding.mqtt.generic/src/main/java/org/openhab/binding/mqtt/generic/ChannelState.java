@@ -28,6 +28,9 @@ import org.openhab.binding.mqtt.generic.values.TextValue;
 import org.openhab.binding.mqtt.generic.values.Value;
 import org.openhab.core.io.transport.mqtt.MqttBrokerConnection;
 import org.openhab.core.io.transport.mqtt.MqttMessageSubscriber;
+import org.openhab.core.library.types.DecimalType;
+import org.openhab.core.library.types.QuantityType;
+import org.openhab.core.library.types.StopMoveType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.types.Command;
@@ -378,7 +381,13 @@ public class ChannelState implements MqttMessageSubscriber {
 
         // Outgoing transformations
         for (ChannelStateTransformation t : transformationsOut) {
-            String commandString = mqttFormatter.getMQTTpublishValue(mqttCommandValue, null);
+            Command cValue = mqttCommandValue;
+            // Only pass numeric value for QuantityType.
+            if (mqttCommandValue instanceof QuantityType<?> qtCommandValue) {
+                cValue = new DecimalType(qtCommandValue.toBigDecimal());
+
+            }
+            String commandString = mqttFormatter.getMQTTpublishValue(cValue, "%s");
             String transformedValue = t.processValue(commandString);
             if (transformedValue != null) {
                 mqttFormatter = new TextValue();
@@ -395,7 +404,13 @@ public class ChannelState implements MqttMessageSubscriber {
         // Formatter: Applied before the channel state value is published to the MQTT broker.
         if (config.formatBeforePublish.length() > 0) {
             try {
-                commandString = mqttFormatter.getMQTTpublishValue(mqttCommandValue, config.formatBeforePublish);
+                Command cValue = mqttCommandValue;
+                // Only pass numeric value for QuantityType of format pattern is %s.
+                if ((mqttCommandValue instanceof QuantityType<?> qtCommandValue)
+                        && ("%s".equals(config.formatBeforePublish) || "%S".equals(config.formatBeforePublish))) {
+                    cValue = new DecimalType(qtCommandValue.toBigDecimal());
+                }
+                commandString = mqttFormatter.getMQTTpublishValue(cValue, config.formatBeforePublish);
             } catch (IllegalFormatException e) {
                 logger.debug("Format pattern incorrect for {}", channelUID, e);
                 commandString = mqttFormatter.getMQTTpublishValue(mqttCommandValue, null);
@@ -406,7 +421,13 @@ public class ChannelState implements MqttMessageSubscriber {
 
         int qos = (config.qos != null) ? config.qos : connection.getQos();
 
-        return connection.publish(config.commandTopic, commandString.getBytes(), qos, config.retained);
+        String commandTopic;
+        if (command.equals(StopMoveType.STOP) && !config.stopCommandTopic.isEmpty()) {
+            commandTopic = config.stopCommandTopic;
+        } else {
+            commandTopic = config.commandTopic;
+        }
+        return connection.publish(commandTopic, commandString.getBytes(), qos, config.retained);
     }
 
     /**
