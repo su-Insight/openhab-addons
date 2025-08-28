@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -17,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,12 +64,15 @@ import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.core.persistence.FilterCriteria.Ordering;
 import org.openhab.core.persistence.HistoricItem;
+import org.openhab.core.persistence.PersistedItem;
 import org.openhab.core.persistence.PersistenceItemInfo;
 import org.openhab.core.persistence.PersistenceService;
 import org.openhab.core.persistence.QueryablePersistenceService;
 import org.openhab.core.persistence.strategy.PersistenceCronStrategy;
 import org.openhab.core.persistence.strategy.PersistenceStrategy;
 import org.openhab.core.types.State;
+import org.openhab.core.types.UnDefType;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -100,7 +102,8 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 @Component(service = { PersistenceService.class,
-        QueryablePersistenceService.class }, configurationPid = "org.openhab.rrd4j", configurationPolicy = ConfigurationPolicy.OPTIONAL)
+        QueryablePersistenceService.class }, configurationPid = "org.openhab.rrd4j", configurationPolicy = ConfigurationPolicy.OPTIONAL, property = Constants.SERVICE_PID
+                + "=org.openhab.rrd4j")
 public class RRD4jPersistenceService implements QueryablePersistenceService {
 
     private record Key(long timestamp, String name) implements Comparable<Key> {
@@ -332,7 +335,7 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
         if (oldValue != null && !oldValue.equals(value)) {
             logger.debug(
                     "Discarding value {} for item {} with timestamp {} because a new value ({}) arrived with the same timestamp.",
-                    oldValue, name, now, value);
+                    oldValue, item.getName(), now, value);
         }
     }
 
@@ -371,9 +374,8 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
                 if (timestamp - 1 > db.getLastUpdateTime()) {
                     // only do it if there is not already a value
                     double lastValue = db.getLastDatasourceValue(DATASOURCE_STATE);
-                    if (!Double.isNaN(lastValue)) {
-                        Sample sample = db.createSample();
-                        sample.setTime(timestamp - 1);
+                    if (!Double.isNaN(lastValue) && lastValue != value) {
+                        Sample sample = db.createSample(timestamp - 1);
                         sample.setValue(DATASOURCE_STATE, lastValue);
                         sample.update();
                         logger.debug("Stored '{}' as value '{}' with timestamp {} in rrd4j database (again)", name,
@@ -385,12 +387,11 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
             }
         }
         try {
-            Sample sample = db.createSample();
-            sample.setTime(timestamp);
+            Sample sample = db.createSample(timestamp);
             double storeValue = value;
             if (db.getDatasource(DATASOURCE_STATE).getType() == DsType.COUNTER) {
                 // counter values must be adjusted by stepsize
-                storeValue = value * db.getRrdDef().getStep();
+                storeValue = value * db.getHeader().getStep();
             }
             sample.setValue(DATASOURCE_STATE, storeValue);
             sample.update();
@@ -412,6 +413,11 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
 
     @Override
     public Iterable<HistoricItem> query(FilterCriteria filter) {
+        return query(filter, null);
+    }
+
+    @Override
+    public Iterable<HistoricItem> query(FilterCriteria filter, @Nullable String alias) {
         ZonedDateTime filterBeginDate = filter.getBeginDate();
         ZonedDateTime filterEndDate = filter.getEndDate();
         if (filterBeginDate != null && filterEndDate != null && filterBeginDate.isAfter(filterEndDate)) {
@@ -425,9 +431,10 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
         }
         logger.trace("Querying rrd4j database for item '{}'", itemName);
 
+        String localAlias = alias != null ? alias : itemName;
         RrdDb db = null;
         try {
-            db = getDB(itemName, false);
+            db = getDB(localAlias, false);
         } catch (Exception e) {
             logger.warn("Failed to open rrd4j database '{}' for querying ({})", itemName, e.toString());
             return List.of();
@@ -441,6 +448,9 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
         Unit<?> unit = null;
         try {
             item = itemRegistry.getItem(itemName);
+            if (item instanceof GroupItem groupItem) {
+                item = groupItem.getBaseItem();
+            }
             if (item instanceof NumberItem numberItem) {
                 // we already retrieve the unit here once as it is a very costly operation,
                 // see https://github.com/openhab/openhab-addons/issues/8928
@@ -464,13 +474,12 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
                 if (filter.getOrdering() == Ordering.DESCENDING && filter.getPageSize() == 1
                         && filter.getPageNumber() == 0) {
                     if (filterEndDate == null || Duration.between(filterEndDate, ZonedDateTime.now()).getSeconds() < db
-                            .getRrdDef().getStep()) {
+                            .getHeader().getStep()) {
                         // we are asked only for the most recent value!
                         double lastValue = db.getLastDatasourceValue(DATASOURCE_STATE);
                         if (!Double.isNaN(lastValue)) {
                             HistoricItem rrd4jItem = new RRD4jItem(itemName, toState.apply(lastValue),
-                                    ZonedDateTime.ofInstant(Instant.ofEpochSecond(db.getLastArchiveUpdateTime()),
-                                            ZoneId.systemDefault()));
+                                    Instant.ofEpochSecond(db.getLastArchiveUpdateTime()));
                             return List.of(rrd4jItem);
                         } else {
                             return List.of();
@@ -499,7 +508,6 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
 
             List<HistoricItem> items = new ArrayList<>();
             long ts = result.getFirstTimestamp();
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond(ts), ZoneId.systemDefault());
             long step = result.getRowCount() > 1 ? result.getStep() : 0;
 
             double prevValue = Double.NaN;
@@ -515,10 +523,9 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
                         prevValue = value;
                     }
 
-                    RRD4jItem rrd4jItem = new RRD4jItem(itemName, state, zdt);
+                    RRD4jItem rrd4jItem = new RRD4jItem(itemName, state, Instant.ofEpochSecond(ts));
                     items.add(rrd4jItem);
                 }
-                zdt = zdt.plusSeconds(step);
                 ts += step;
             }
             return items;
@@ -532,6 +539,118 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
                 logger.debug("Error closing rrd4j database: {}", e.getMessage());
             }
         }
+    }
+
+    /**
+     * Returns a {@link PersistedItem} representing the persisted state, last update and change timestamps and previous
+     * persisted state. This can be used to restore the full state of an item.
+     * The default implementation queries the service and iterates backward to find the last change and previous
+     * persisted state. Persistence services can override this default implementation with a more specific or efficient
+     * algorithm.
+     *
+     * This method overrides the default implementation in the interface as queries without a begin date are not allowed
+     * in the rrd4j database. If the last change cannot be found in half the length of the first archive, a null value
+     * for the last change and previous persisted state will be returned with {@link PersistedItem}.
+     *
+     * @param itemName name of item
+     * @param alias alias of item
+     *
+     * @return a {@link PersistedItem} or null if the item has not been persisted
+     */
+    @Override
+    public @Nullable PersistedItem persistedItem(String itemName, @Nullable String alias) {
+        State currentState = UnDefType.NULL;
+        State previousState = null;
+        ZonedDateTime lastUpdate = null;
+        ZonedDateTime lastChange = null;
+
+        // Avoid query with open begin date. Don't look further back than half of the first archive.
+        // Only half of the archive is considered to avoid accidently querying the next archive with lower granularity.
+        String localAlias = alias != null ? alias : itemName;
+        RrdDefConfig rrdDefConfig = getRrdDefConfig(localAlias);
+        if (rrdDefConfig == null) {
+            logger.warn("No rrd4j database definition found for {}", itemName);
+            return null;
+        }
+        List<RrdArchiveDef> rrdArchiveDefs = rrdDefConfig.archives;
+        if (rrdArchiveDefs.isEmpty()) {
+            logger.warn("No rrd4j archive definition found for {}", itemName);
+            return null;
+        }
+        RrdArchiveDef rrdArchiveDef = rrdArchiveDefs.get(0);
+        long archiveLength = (rrdArchiveDef.rows * rrdArchiveDef.steps) / 2;
+        ZonedDateTime endDate = ZonedDateTime.now();
+        ZonedDateTime beginDate = endDate.minusSeconds(archiveLength);
+
+        int pageNumber = 0;
+        FilterCriteria filter = new FilterCriteria().setItemName(itemName).setBeginDate(beginDate).setEndDate(endDate)
+                .setOrdering(Ordering.DESCENDING).setPageSize(1000).setPageNumber(pageNumber);
+        Iterable<HistoricItem> items = query(filter, alias);
+        while (items != null) {
+            Iterator<HistoricItem> it = items.iterator();
+            int itemCount = 0;
+            if (UnDefType.NULL.equals(currentState) && it.hasNext()) {
+                HistoricItem historicItem = it.next();
+                itemCount++;
+                currentState = historicItem.getState();
+                lastUpdate = historicItem.getTimestamp();
+                lastChange = lastUpdate;
+            }
+            while (it.hasNext()) {
+                HistoricItem historicItem = it.next();
+                itemCount++;
+                if (!historicItem.getState().equals(currentState)) {
+                    previousState = historicItem.getState();
+                    items = null;
+                    break;
+                }
+                lastChange = historicItem.getTimestamp();
+            }
+            if (itemCount == filter.getPageSize()) {
+                filter.setPageNumber(++pageNumber);
+                items = query(filter);
+            } else {
+                items = null;
+            }
+        }
+
+        if (UnDefType.NULL.equals(currentState) || lastUpdate == null) {
+            return null;
+        }
+
+        final State state = currentState;
+        final ZonedDateTime lastStateUpdate = lastUpdate;
+        final State lastState = previousState;
+        // if we don't find a previous state in persistence, we also don't know when it last changed
+        final ZonedDateTime lastStateChange = previousState != null ? lastChange : null;
+
+        return new PersistedItem() {
+
+            @Override
+            public ZonedDateTime getTimestamp() {
+                return lastStateUpdate;
+            }
+
+            @Override
+            public State getState() {
+                return state;
+            }
+
+            @Override
+            public String getName() {
+                return itemName;
+            }
+
+            @Override
+            public @Nullable ZonedDateTime getLastStateChange() {
+                return lastStateChange;
+            }
+
+            @Override
+            public @Nullable State getLastState() {
+                return lastState;
+            }
+        };
     }
 
     @Override
@@ -623,17 +742,20 @@ public class RRD4jPersistenceService implements QueryablePersistenceService {
 
     public ConsolFun getConsolidationFunction(RrdDb db) {
         try {
-            return db.getRrdDef().getArcDefs()[0].getConsolFun();
+            return db.getArchive(0).getConsolFun();
         } catch (IOException e) {
             return ConsolFun.MAX;
         }
     }
 
+    /**
+     * Get the state Mapper for a given item
+     *
+     * @param item the item (in case of a group item, the base item has to be supplied)
+     * @param unit the unit to use
+     * @return the state mapper
+     */
     private <Q extends Quantity<Q>> DoubleFunction<State> toStateMapper(@Nullable Item item, @Nullable Unit<Q> unit) {
-        if (item instanceof GroupItem groupItem) {
-            item = groupItem.getBaseItem();
-        }
-
         if (item instanceof SwitchItem && !(item instanceof DimmerItem)) {
             return (value) -> OnOffType.from(value != 0.0d);
         } else if (item instanceof ContactItem) {
