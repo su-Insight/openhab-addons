@@ -15,6 +15,7 @@ package org.openhab.binding.senechome.internal;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -26,7 +27,7 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.MimeTypes;
-import org.openhab.binding.senechome.internal.json.SenecHomeResponse;
+import org.openhab.binding.senechome.internal.dto.SenecHomeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +82,8 @@ public class SenecHomeApi {
         try {
             String dataToSend = gson.toJson(new SenecHomeResponse());
             logger.trace("data to send: {}", dataToSend);
-            response = request.method(HttpMethod.POST).content(new StringContentProvider(dataToSend)).send();
+            response = request.method(HttpMethod.POST).content(new StringContentProvider(dataToSend))
+                    .timeout(15, TimeUnit.SECONDS).send();
             if (response.getStatus() == HttpStatus.OK_200) {
                 String responseString = response.getContentAsString();
                 return Objects.requireNonNull(gson.fromJson(responseString, SenecHomeResponse.class));

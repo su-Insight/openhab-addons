@@ -12,13 +12,19 @@
  */
 package org.openhab.automation.jsscripting.internal;
 
+import static org.openhab.core.automation.module.script.ScriptTransformationService.OPENHAB_TRANSFORMATION_SCRIPT;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import javax.script.Compilable;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.graalvm.polyglot.PolyglotException;
-import org.openhab.automation.jsscripting.internal.scriptengine.InvocationInterceptingScriptEngineWithInvocableAndAutoCloseable;
+import org.openhab.automation.jsscripting.internal.scriptengine.InvocationInterceptingScriptEngineWithInvocableAndCompilableAndAutoCloseable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,11 +32,12 @@ import org.slf4j.LoggerFactory;
  * Wraps ScriptEngines provided by Graal to provide error messages and stack traces for scripts.
  *
  * @author Jonathan Gilbert - Initial contribution
+ * @author Florian Hotze - Improve logger name, Fix memory leak caused by exception logging
  */
-class DebuggingGraalScriptEngine<T extends ScriptEngine & Invocable & AutoCloseable>
-        extends InvocationInterceptingScriptEngineWithInvocableAndAutoCloseable<T> {
+class DebuggingGraalScriptEngine<T extends ScriptEngine & Invocable & AutoCloseable & Compilable>
+        extends InvocationInterceptingScriptEngineWithInvocableAndCompilableAndAutoCloseable<T> {
 
-    private static final String SCRIPT_TRANSFORMATION_ENGINE_IDENTIFIER = "openhab-transformation-script-";
+    private static final int STACK_TRACE_LENGTH = 5;
 
     private @Nullable Logger logger;
 
@@ -49,13 +56,24 @@ class DebuggingGraalScriptEngine<T extends ScriptEngine & Invocable & AutoClosea
     @Override
     public Exception afterThrowsInvocation(Exception e) {
         Throwable cause = e.getCause();
+        // OPS4J Pax Logging holds a reference to the exception, which causes the OpenhabGraalJSScriptEngine to not be
+        // removed from heap by garbage collection and causing a memory leak.
+        // Therefore, don't pass the exceptions itself to the logger, but only their message!
         if (cause instanceof IllegalArgumentException) {
-            logger.error("Failed to execute script:", e);
-        }
-        if (cause instanceof PolyglotException) {
-            logger.error("Failed to execute script:", cause);
+            logger.error("Failed to execute script: {}", stringifyThrowable(cause));
+        } else if (cause instanceof PolyglotException) {
+            logger.error("Failed to execute script: {}", stringifyThrowable(cause));
         }
         return e;
+    }
+
+    private String stringifyThrowable(Throwable throwable) {
+        String message = throwable.getMessage();
+        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+        String stackTrace = Arrays.stream(stackTraceElements).limit(STACK_TRACE_LENGTH)
+                .map(t -> "        at " + t.toString()).collect(Collectors.joining(System.lineSeparator()))
+                + System.lineSeparator() + "        ... " + stackTraceElements.length + " more";
+        return (message != null) ? message + System.lineSeparator() + stackTrace : stackTrace;
     }
 
     /**
@@ -75,9 +93,8 @@ class DebuggingGraalScriptEngine<T extends ScriptEngine & Invocable & AutoClosea
         } else if (ruleUID != null) {
             identifier = ruleUID.toString();
         } else if (ohEngineIdentifier != null) {
-            if (ohEngineIdentifier.toString().startsWith(SCRIPT_TRANSFORMATION_ENGINE_IDENTIFIER)) {
-                identifier = ohEngineIdentifier.toString().replaceAll(SCRIPT_TRANSFORMATION_ENGINE_IDENTIFIER,
-                        "transformation.");
+            if (ohEngineIdentifier.toString().startsWith(OPENHAB_TRANSFORMATION_SCRIPT)) {
+                identifier = ohEngineIdentifier.toString().replaceAll(OPENHAB_TRANSFORMATION_SCRIPT, "transformation.");
             }
         }
 
