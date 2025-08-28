@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.knx.internal.dpt;
 
+import static java.lang.Double.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.text.DecimalFormat;
@@ -26,7 +27,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.openhab.binding.knx.internal.itests.Back2BackTest;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.HSBType;
@@ -36,8 +36,6 @@ import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.util.ColorUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import tuwien.auto.calimero.dptxlator.DPTXlator2ByteUnsigned;
 import tuwien.auto.calimero.dptxlator.DPTXlator4ByteFloat;
@@ -54,8 +52,6 @@ import tuwien.auto.calimero.dptxlator.DptXlator2ByteSigned;
  */
 @NonNullByDefault
 class DPTTest {
-    public static final Logger LOGGER = LoggerFactory.getLogger(Back2BackTest.class);
-
     @Test
     void testDptBroken() {
         assertNull(ValueEncoder.encode(new DecimalType(), "9.042.1"));
@@ -117,9 +113,8 @@ class DPTTest {
     @Test
     void testToDPT7ValueFromQuantityType() {
         assertEquals("1000", ValueEncoder.encode(new QuantityType<>("1000 ms"), "7.002"));
-        // according to spec this should be 1000 for 7.003 and 7.004 - 1 is a workaround for Calimero 2.5.1
-        assertEquals("1", ValueEncoder.encode(new QuantityType<>("1000 ms"), "7.003"));
-        assertEquals("1", ValueEncoder.encode(new QuantityType<>("1000 ms"), "7.004"));
+        assertEquals("1000", ValueEncoder.encode(new QuantityType<>("1000 ms"), "7.003"));
+        assertEquals("1000", ValueEncoder.encode(new QuantityType<>("1000 ms"), "7.004"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1000 ms"), "7.005"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("60 s"), "7.006"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("60 min"), "7.007"));
@@ -129,6 +124,10 @@ class DPTTest {
         assertEquals("1000", ValueEncoder.encode(new QuantityType<>("1000 lx"), "7.013"));
 
         assertEquals("3000", ValueEncoder.encode(new QuantityType<>("3000 K"), "7.600"));
+        // unit for 7.600 is K; special handling for color temperature: make sure °C and mired work as well
+        assertEquals("3273.15", ValueEncoder.encode(new QuantityType<>("3000 °C"), "7.600"));
+        assertEquals("4000", ValueEncoder.encode(new QuantityType<>("250 mired"), "7.600"));
+        assertEquals("4000", ValueEncoder.encode(new QuantityType<>("250 mirek"), "7.600"));
     }
 
     @Test
@@ -154,7 +153,7 @@ class DPTTest {
     void testToDPT9ValueFromQuantityType() {
         assertEquals("23.1", ValueEncoder.encode(new QuantityType<>("23.1 °C"), "9.001"));
         assertEquals(5.0,
-                Double.parseDouble(Objects.requireNonNull(ValueEncoder.encode(new QuantityType<>("41 °F"), "9.001"))));
+                parseDouble(Objects.requireNonNull(ValueEncoder.encode(new QuantityType<>("41 °F"), "9.001"))));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("274.15 K"), "9.001"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 K"), "9.002"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1000 mK"), "9.002"));
@@ -169,8 +168,8 @@ class DPTTest {
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 m/s"), "9.005"));
         assertTrue(Objects.requireNonNullElse(ValueEncoder.encode(new QuantityType<>("1.94 kn"), "9.005"), "")
                 .startsWith("0.99"));
-        assertEquals(1.0, Double
-                .parseDouble(Objects.requireNonNull(ValueEncoder.encode(new QuantityType<>("3.6 km/h"), "9.005"))));
+        assertEquals(1.0,
+                parseDouble(Objects.requireNonNull(ValueEncoder.encode(new QuantityType<>("3.6 km/h"), "9.005"))));
         assertEquals("456", ValueEncoder.encode(new QuantityType<>("456 Pa"), "9.006"));
         assertEquals("70", ValueEncoder.encode(new QuantityType<>("70 %"), "9.007"));
         assertEquals("8", ValueEncoder.encode(new QuantityType<>("8 ppm"), "9.008"));
@@ -202,18 +201,26 @@ class DPTTest {
         ValueEncoder.encode(new QuantityType<>("1"), "9.030");
         // wrong unit
         ValueEncoder.encode(new QuantityType<>("1 kg"), "9.030");
+
+        // MEEE EMMM MMMM MMMM
+        // "the encoded value 7FFFh shall always be used to denote invalid data"
+        // ETS sends 0x7fff if NaN is sent via diagnostics
+        // approach is to ignore data, same as for NaN with DPT14
+        // -> should return null and do not throw an exception
+        assertNull(ValueDecoder.decode("9.001", new byte[] { (byte) 0x7f, (byte) 0xff }, QuantityType.class));
+        assertNull(ValueDecoder.decode("9.001", new byte[] { (byte) 0x7f, (byte) 0xff }, DecimalType.class));
     }
 
     @Test
     void testToDPT10ValueFromQuantityType() {
         // DateTimeType, not QuantityType
-        assertEquals("Wed, 17:30:00", ValueEncoder.encode(new DateTimeType("2019-06-12T17:30:00Z"), "10.001"));
+        assertEquals("Wed, 17:30:00", ValueEncoder.encode(new DateTimeType("2019-06-12T17:30:00"), "10.001"));
     }
 
     @Test
     void testToDPT11ValueFromQuantityType() {
         // DateTimeType, not QuantityType
-        assertEquals("2019-06-12", ValueEncoder.encode(new DateTimeType("2019-06-12T17:30:00Z"), "11.001"));
+        assertEquals("2019-06-12", ValueEncoder.encode(new DateTimeType("2019-06-12T17:30:00"), "11.001"));
     }
 
     @Test
@@ -322,7 +329,15 @@ class DPTTest {
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 Pa"), "14.066"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 N/m"), "14.067"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 °C"), "14.068"));
+        // unit for 14.068 is °C; special handling for color temperature: make sure °C and mired work as well
+        assertEquals("-272.15", ValueEncoder.encode(new QuantityType<>("1 K"), "14.068"));
+        assertEquals("3726.85", ValueEncoder.encode(new QuantityType<>("250 mired"), "14.068"));
+        assertEquals("3726.85", ValueEncoder.encode(new QuantityType<>("250 mirek"), "14.068"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 K"), "14.069"));
+        // unit for 14.069 is K; special handling for color temperature: make sure °C and mired work as well
+        assertEquals("274.15", ValueEncoder.encode(new QuantityType<>("1 °C"), "14.069"));
+        assertEquals("4000", ValueEncoder.encode(new QuantityType<>("250 mired"), "14.069"));
+        assertEquals("4000", ValueEncoder.encode(new QuantityType<>("250 mirek"), "14.069"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 K"), "14.070"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 J/K"), "14.071"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 W/m/K"), "14.072"));
@@ -338,12 +353,32 @@ class DPTTest {
 
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 m³/h"), "14.1200"));
         assertEquals("1", ValueEncoder.encode(new QuantityType<>("1 l/s"), "14.1201"));
+        // IEEE 754 floating point representation, signaling and and non-signaling +/-NAN and +/-INF
+        // -> should return null and do not throw an exception
+        // ETS sends 0xffc00000 if NaN is sent via diagnostics
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff },
+                QuantityType.class));
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0xff, (byte) 0xbf, (byte) 0xff, (byte) 0xff },
+                QuantityType.class));
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0x7f, (byte) 0xff, (byte) 0xff, (byte) 0xff },
+                QuantityType.class));
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0x7f, (byte) 0xbf, (byte) 0xff, (byte) 0xff },
+                QuantityType.class));
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0x7f, (byte) 0x80, 0, 0 }, QuantityType.class));
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0xff, (byte) 0x80, 0, 0 }, QuantityType.class));
+        // same for DecimalType
+        assertNull(ValueDecoder.decode("14.000", new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff },
+                DecimalType.class));
+        // and for dimensionless
+        assertNull(ValueDecoder.decode("14.057", new byte[] { (byte) 0xff, (byte) 0x80, 0, 0 }, QuantityType.class));
+        assertNull(ValueDecoder.decode("14.057", new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff },
+                DecimalType.class));
     }
 
     @Test
     void testToDPT19ValueFromQuantityType() {
         // DateTimeType, not QuantityType
-        assertEquals("2019-06-12 17:30:00", ValueEncoder.encode(new DateTimeType("2019-06-12T17:30:00Z"), "19.001"));
+        assertEquals("2019-06-12 17:30:00", ValueEncoder.encode(new DateTimeType("2019-06-12T17:30:00"), "19.001"));
         // special: clock fault
         assertNull(ValueDecoder.decode("19.001", new byte[] { (byte) (2019 - 1900), 1, 15, 17, 30, 0, (byte) 0x80, 0 },
                 DateTimeType.class));
@@ -463,9 +498,9 @@ class DPTTest {
         String[] parts = enc.split(" ");
         assertEquals(5, parts.length);
         int[] rgb = ColorUtil.hsbToRgb(hsbType);
-        assertEquals(rgb[0] * 100d / 255, Double.valueOf(parts[0].replace(',', '.')), 1);
-        assertEquals(rgb[1] * 100d / 255, Double.valueOf(parts[1].replace(',', '.')), 1);
-        assertEquals(rgb[2] * 100d / 255, Double.valueOf(parts[2].replace(',', '.')), 1);
+        assertEquals(rgb[0] * 100d / 255, valueOf(parts[0].replace(',', '.')), 1);
+        assertEquals(rgb[1] * 100d / 255, valueOf(parts[1].replace(',', '.')), 1);
+        assertEquals(rgb[2] * 100d / 255, valueOf(parts[2].replace(',', '.')), 1);
     }
 
     @Test
@@ -485,9 +520,9 @@ class DPTTest {
         String[] parts = enc.split(" ");
         assertEquals(5, parts.length);
         int[] rgb = ColorUtil.hsbToRgb(hsbType);
-        assertEquals(rgb[0] * 100d / 255, Double.valueOf(parts[0].replace(',', '.')), 1);
-        assertEquals(rgb[1] * 100d / 255, Double.valueOf(parts[1].replace(',', '.')), 1);
-        assertEquals(rgb[2] * 100d / 255, Double.valueOf(parts[2].replace(',', '.')), 1);
+        assertEquals(rgb[0] * 100d / 255, valueOf(parts[0].replace(',', '.')), 1);
+        assertEquals(rgb[1] * 100d / 255, valueOf(parts[1].replace(',', '.')), 1);
+        assertEquals(rgb[2] * 100d / 255, valueOf(parts[2].replace(',', '.')), 1);
     }
 
     // This test checks all our overrides for units. It allows to detect unnecessary overrides when we
@@ -499,10 +534,8 @@ class DPTTest {
 
         // two byte unsigned (DPT 7)
         assertNotEquals("", DPTXlator2ByteUnsigned.DPT_VALUE_2_UCOUNT.getUnit()); // counts have no unit
-        assertNotEquals(DPTXlator2ByteUnsigned.DPT_TIMEPERIOD_10.getUnit(), "ms"); // according to spec, it is ms
-        assertNotEquals(DPTXlator2ByteUnsigned.DPT_TIMEPERIOD_100.getUnit(), "ms"); // according to spec, it is ms
 
-        // two byte signed (DPT 8, DPTXlator is missing in calimero 2.5-M1)
+        // two byte signed (DPT 8)
         assertNotEquals("", DptXlator2ByteSigned.DptValueCount.getUnit()); // pulses have no unit
 
         // 4 byte unsigned (DPT 12)
@@ -532,8 +565,14 @@ class DPTTest {
         assertNotEquals(DPTXlator4ByteFloat.DPT_ELECTROMAGNETIC_MOMENT.getUnit(),
                 Units.AMPERE.multiply(SIUnits.SQUARE_METRE).toString());
 
-        // 64 bit signed (DPT 29)
+        // 64-bit signed (DPT 29)
         assertNotEquals(DPTXlator64BitSigned.DPT_REACTIVE_ENERGY.getUnit(), Units.VAR_HOUR.toString());
+
+        // workaround for color temperatures given in MIRED, required as long as toUnit does
+        // not convert MIRED to Kelvin
+        // -> if this test fails, workaround in ValueEncoder can be removed
+        assertNull((new QuantityType<>("1 mired")).toUnit("K"));
+        assertNotNull((new QuantityType<>("1 mired")).toInvertibleUnit("K"));
     }
 
     private static Stream<Map.Entry<String, String>> unitProvider() {
@@ -602,6 +641,7 @@ class DPTTest {
 
         // encoding will return a String in notation defined by Calimero: "(x,xxxx y,yyyy) YY,Y %"
         String result = ValueEncoder.encode(hsb, dpt);
+        assertNotNull(result);
 
         // for back to back test, compare numerical values to allow tolerances
         double dx = (((value[0] & 0xff) << 8) | (value[1] & 0xff)) / 65535.0;
@@ -616,9 +656,9 @@ class DPTTest {
         Assertions.assertNotNull(stringx);
         Assertions.assertNotNull(stringy);
         Assertions.assertNotNull(stringY);
-        double rx = Double.parseDouble(stringx.replace(',', '.'));
-        double ry = Double.parseDouble(stringy.replace(',', '.'));
-        double rY = Double.parseDouble(stringY.replace(',', '.'));
+        double rx = parseDouble(stringx.replace(',', '.'));
+        double ry = parseDouble(stringy.replace(',', '.'));
+        double rY = parseDouble(stringY.replace(',', '.'));
 
         final double tolerance = 0.001;
         if ((Math.abs(dx - rx) > tolerance) || (Math.abs(dy - ry) > tolerance)

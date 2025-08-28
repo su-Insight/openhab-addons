@@ -113,15 +113,26 @@
 		<state pattern="%.1f %unit%" step="0.5"/>
 	</channel-type>
 
+	<channel-type id="targetTemperature" advanced="true">
+		<item-type>Number:Temperature</item-type>
+		<label>Target Temperature</label>
+		<description>Target temperature (read only)</description>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
 	<channel-type id="mode">
 		<item-type>String</item-type>
 		<label>Mode</label>
-		<description>Set mode of the zone (read/write)</description>
+		<description>The zone operation mode (read/write)</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Mode</tag>
+		</tags>
 		<state>
 			<options>
 				<option value="AUTO">Automatic</option>
 				<option value="MANUAL">Manual</option>
-				<option value="PROTECTION">Antifreeze / Heat Protection</option>
+				<option value="PROTECTION">Anti-freeze / Heat Protection</option>
 				<option value="OFF">Off</option>
 			</options>
 		</state>
@@ -131,6 +142,10 @@
 		<item-type>String</item-type>
 		<label>Set Fan Speed</label>
 		<description>Set speed of the Fan Coil (read/write)</description>
+		<tags>
+			<tag>Control</tag>
+			<tag>Speed</tag>
+		</tags>
 		<state>
 			<options>
 				<option value="OFF">Off</option>
@@ -186,6 +201,20 @@
 		</state>
 	</channel-type>
 
+	<channel-type id="heating" advanced="true">
+		<item-type>Switch</item-type>
+		<label>Heating Active</label>
+		<description>Heating is active in the zone (read only)</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="cooling" advanced="true">
+		<item-type>Switch</item-type>
+		<label>Cooling Active</label>
+		<description>Cooling is active in the zone (read only)</description>
+		<state readOnly="true"/>
+	</channel-type>
+
 	<channel-type id="actuators" advanced="true">
 		<item-type>String</item-type>
 		<label>Actuators Status</label>
@@ -215,7 +244,7 @@
 		<state readOnly="true">
 			<options>
 				<option value="OFF">Off</option>
-				<option value="PROTECTION">Antifreeze / Heat Protection</option>
+				<option value="PROTECTION">Anti-freeze / Heat Protection</option>
 				<option value="PLUS_3">+3</option>
 				<option value="PLUS_2">+2</option>
 				<option value="PLUS_1">+1</option>
@@ -230,14 +259,20 @@
 	<channel-type id="modeCentralUnit">
 		<item-type>String</item-type>
 		<label>Central Unit Mode</label>
-		<description>Set mode of the Central Unit (read/write)</description>
+		<description>The Central Unit operation mode (read/write)</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Mode</tag>
+		</tags>
 		<state>
 			<options>
 				<option value="WEEKLY">Weekly</option>
 				<option value="SCENARIO">Scenarios</option>
 				<option value="MANUAL">Manual</option>
-				<option value="PROTECTION">Antifreeze / Heat Protection</option>
+				<option value="PROTECTION">Anti-freeze / Heat Protection</option>
 				<option value="OFF">Off</option>
+				<option value="HOLIDAY">Holiday</option>
+				<option value="VACATION">Vacation</option>
 			</options>
 		</state>
 	</channel-type>
@@ -282,6 +317,13 @@
 		</state>
 	</channel-type>
 
+	<channel-type id="vacationDays">
+		<item-type>Number</item-type>
+		<label>Vacation Days</label>
+		<description>Number of days the Central Unit will be set to Anti-freeze / Heat Protection target temperature before
+			returning to mode WEEKLY (read/write)</description>
+	</channel-type>
+
 	<channel-type id="remoteControl" advanced="true">
 		<item-type>String</item-type>
 		<label>Remote Control</label>
@@ -323,7 +365,7 @@
 	<channel-type id="atLeastOneProbeProtection" advanced="true">
 		<item-type>Switch</item-type>
 		<label>At least one probe in PROTECTION</label>
-		<description>At least one probe in PROTECTION mode (Antifreeze / Heat Protection) indicator from Central Unit (read
+		<description>At least one probe in PROTECTION mode (Anti-freeze / Heat Protection) indicator from Central Unit (read
 			only)</description>
 		<state readOnly="true"></state>
 	</channel-type>
@@ -341,6 +383,10 @@
 		<label>Power</label>
 		<description>Current active power</description>
 		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
 		<state readOnly="true" pattern="%.0f %unit%"></state>
 	</channel-type>
 
@@ -349,6 +395,10 @@
 		<label>Energy This Month</label>
 		<description>Total energy measured for this month</description>
 		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"></state>
 	</channel-type>
 
@@ -357,6 +407,10 @@
 		<label>Energy Today</label>
 		<description>Total energy measured for today</description>
 		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
 		<state readOnly="true" pattern="%.1f %unit%"></state>
 	</channel-type>
 
@@ -433,6 +487,9 @@
 		<item-type>Switch</item-type>
 		<label>System State</label>
 		<description>Alarm system is active (ON) or inactive (OFF) (read only).</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
 		<state readOnly="true"/>
 	</channel-type>
 
@@ -440,6 +497,9 @@
 		<item-type>Switch</item-type>
 		<label>Armed State</label>
 		<description>Alarm is armed (ON) or disarmed (OFF) (read only).</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
 		<state readOnly="true"/>
 	</channel-type>
 
@@ -447,6 +507,10 @@
 		<item-type>Switch</item-type>
 		<label>Network State</label>
 		<description>Alarm system network state (ON = network OK, OFF = no network) (read only).</description>
+		<tags>
+			<tag>Alarm</tag>
+			<tag>Power</tag>
+		</tags>
 		<state readOnly="true"/>
 	</channel-type>
 
@@ -454,6 +518,10 @@
 		<item-type>String</item-type>
 		<label>Battery State</label>
 		<description>Alarm system battery state (read only).</description>
+		<tags>
+			<tag>Alarm</tag>
+			<tag>LowBattery</tag>
+		</tags>
 		<state readOnly="true">
 			<options>
 				<option value="OK">Ok</option>
@@ -467,6 +535,9 @@
 		<item-type>String</item-type>
 		<label>Zone Alarm</label>
 		<description>Current alarm for the zone (read only).</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
 		<state readOnly="true">
 			<options>
 				<option value="INTRUSION">Intrusion</option>
@@ -485,6 +556,10 @@
 		<label>Zone Alarm Timestamp</label>
 		<description>Current alarm's timestamp for the zone (read only).</description>
 		<category>Time</category>
+		<tags>
+			<tag>Status</tag>
+			<tag>Timestamp</tag>
+		</tags>
 		<state readOnly="true"/>
 	</channel-type>
 
@@ -493,6 +568,9 @@
 		<item-type>Switch</item-type>
 		<label>Alarm Zone State</label>
 		<description>Alarm zone is active (ON) or inactive (OFF) (read only).</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
 		<state readOnly="true"/>
 	</channel-type>
 </thing:thing-descriptions>
