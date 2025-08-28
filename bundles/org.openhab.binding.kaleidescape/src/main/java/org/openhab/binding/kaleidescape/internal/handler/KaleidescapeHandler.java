@@ -89,6 +89,7 @@ public class KaleidescapeHandler extends BaseThingHandler implements Kaleidescap
     protected int metaRuntimeMultiple = 1;
     protected int volume = 0;
     protected boolean volumeEnabled = false;
+    protected boolean volumeBasicEnabled = false;
     protected boolean isMuted = false;
     protected boolean isLoadHighlightedDetails = false;
     protected boolean isLoadAlbumDetails = false;
@@ -162,6 +163,8 @@ public class KaleidescapeHandler extends BaseThingHandler implements Kaleidescap
             this.volume = config.initialVolume;
             this.updateState(VOLUME, new PercentType(this.volume));
             this.updateState(MUTE, OnOffType.OFF);
+        } else if (config.volumeBasicEnabled) {
+            this.volumeBasicEnabled = true;
         }
 
         if (serialPort != null) {
@@ -254,6 +257,9 @@ public class KaleidescapeHandler extends BaseThingHandler implements Kaleidescap
                     case CONTROL:
                     case MUSIC_CONTROL:
                         handleControlCommand(command);
+                        break;
+                    case CHANNEL_TYPE_SENDCMD:
+                        connector.sendCommand(command.toString());
                         break;
                     default:
                         logger.debug("Command {} from channel {} failed: unexpected command", command, channel);
