@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -106,7 +106,11 @@ public class TextValue extends Value {
         final Set<String> states = this.states;
         String valueStr = command.toString();
         if (states != null && !states.contains(valueStr)) {
-            throw new IllegalArgumentException("Value " + valueStr + " not within range");
+            if (valueStr.isEmpty()) {
+                return UnDefType.NULL;
+            } else {
+                throw new IllegalArgumentException("Value " + valueStr + " not within range");
+            }
         }
         return new StringType(valueStr);
     }

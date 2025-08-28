@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -111,7 +111,32 @@ public class BoschHttpClient extends HttpClient {
      * @return Bosch SHC URL for passed endpoint
      */
     public String getBoschShcUrl(String endpoint) {
-        return String.format("https://%s:8444/%s", this.ipAddress, endpoint);
+        String url = String.format("https://%s:8444/%s", this.ipAddress, endpoint);
+        return escapeURL(url);
+    }
+
+    /**
+     * Performs specific URL escaping required for certain Bosch SHC URLs.
+     * <p>
+     * In particular, hash characters in child device IDs must be escaped with <code>%23</code>.
+     * <p>
+     * Invalid example:
+     * 
+     * <pre>
+     * https://host:port/devices/hdm:ZigBee:70ac08fffe5294ea#3/services/PowerSwitch/state
+     * </pre>
+     * 
+     * Valid example:
+     * 
+     * <pre>
+     * https://host:port/devices/hdm:ZigBee:70ac08fffe5294ea%233/services/PowerSwitch/state
+     * </pre>
+     * 
+     * @param url the URL to be escaped
+     * @return the escaped URL
+     */
+    private String escapeURL(String url) {
+        return url.replace("#", "%23");
     }
 
     /**

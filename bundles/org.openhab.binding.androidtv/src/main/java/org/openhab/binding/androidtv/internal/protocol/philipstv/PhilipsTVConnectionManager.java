@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -230,9 +230,9 @@ public class PhilipsTVConnectionManager implements DiscoveryListener {
             Map<String, String> configMap = OBJECT_MAPPER.readValue(configJson,
                     new TypeReference<HashMap<String, String>>() {
                     });
-            this.username = Optional.ofNullable(configMap.get("username")).orElse("");
-            this.password = Optional.ofNullable(configMap.get("password")).orElse("");
-            this.macAddress = Optional.ofNullable(configMap.get("macAddress")).orElse("");
+            this.username = configMap.getOrDefault("username", "");
+            this.password = configMap.getOrDefault("password", "");
+            this.macAddress = configMap.getOrDefault("macAddress", "");
             logger.debug("Processed configJson as {} {} {}", this.username, this.password, this.macAddress);
         } catch (IOException ex) {
             logger.debug("IOException when reading configJson from file {}", ex.getMessage());

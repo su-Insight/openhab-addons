@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,7 +12,9 @@
  */
 package org.openhab.binding.evcc.internal.api.dto;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -32,8 +34,8 @@ public class Result {
     @SerializedName("batteryCapacity")
     private float batteryCapacity;
 
-    @SerializedName("batteryConfigured")
-    private boolean batteryConfigured;
+    @SerializedName("battery")
+    private Battery[] battery;
 
     @SerializedName("batteryPower")
     private float batteryPower;
@@ -47,11 +49,14 @@ public class Result {
     @SerializedName("batteryMode")
     private String batteryMode;
 
-    @SerializedName("gridConfigured")
-    private boolean gridConfigured;
+    @SerializedName("gridCurrents")
+    private float[] gridCurrents;
+
+    @SerializedName("gridEnergy")
+    private float gridEnergy;
 
     @SerializedName("gridPower")
-    private float gridPower;
+    private Float gridPower;
 
     @SerializedName("homePower")
     private float homePower;
@@ -71,8 +76,8 @@ public class Result {
     @SerializedName("residualPower")
     private float residualPower;
 
-    @SerializedName("pvConfigured")
-    private boolean pvConfigured;
+    @SerializedName("pv")
+    private PV[] pv;
 
     @SerializedName("pvPower")
     private float pvPower;
@@ -90,17 +95,17 @@ public class Result {
     private String availableVersion;
 
     /**
+     * @return all configured batteries
+     */
+    public Battery[] getBattery() {
+        return battery;
+    }
+
+    /**
      * @return battery's capacity
      */
     public float getBatteryCapacity() {
         return batteryCapacity;
-    }
-
-    /**
-     * @return whether battery is configured
-     */
-    public boolean getBatteryConfigured() {
-        return batteryConfigured;
     }
 
     /**
@@ -160,16 +165,23 @@ public class Result {
     }
 
     /**
-     * @return whether grid is configured
+     * @return grid's currents
      */
-    public boolean getGridConfigured() {
-        return gridConfigured;
+    public float[] getGridCurrents() {
+        return gridCurrents;
     }
 
     /**
-     * @return grid's power
+     * @return grid's energy
      */
-    public float getGridPower() {
+    public float getGridEnergy() {
+        return gridEnergy;
+    }
+
+    /**
+     * @return grid's power or {@code null} if not available
+     */
+    public Float getGridPower() {
         return gridPower;
     }
 
@@ -188,10 +200,10 @@ public class Result {
     }
 
     /**
-     * @return whether pv is configured
+     * @return all configured PVs
      */
-    public boolean getPvConfigured() {
-        return pvConfigured;
+    public PV[] getPV() {
+        return pv;
     }
 
     /**
@@ -209,7 +221,12 @@ public class Result {
     }
 
     public Map<String, Vehicle> getVehicles() {
-        return vehicles;
+        Map<String, Vehicle> correctedMap = new HashMap<>();
+        for (Entry<String, Vehicle> entry : vehicles.entrySet()) {
+            // The key from the vehicles map is used as uid, so it should not contain semicolons.
+            correctedMap.put(entry.getKey().replace(":", "-"), entry.getValue());
+        }
+        return correctedMap;
     }
 
     /**

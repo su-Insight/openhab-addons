@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -55,7 +55,7 @@ public class LatencyParser {
 
         Matcher m = LATENCY_PATTERN.matcher(inputLine);
         if (m.find() && m.groupCount() == 1) {
-            return millisToDuration(Double.parseDouble(m.group(1)));
+            return millisToDuration(Double.parseDouble(m.group(1).replace(",", ".")));
         }
 
         logger.debug("Did not find a latency value");

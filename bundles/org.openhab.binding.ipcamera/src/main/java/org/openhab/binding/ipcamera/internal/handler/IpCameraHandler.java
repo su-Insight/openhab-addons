@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -240,7 +240,7 @@ public class IpCameraHandler extends BaseThingHandler {
                             }
                             if (contentType.contains("multipart")) {
                                 boundary = Helper.searchString(contentType, "boundary=");
-                                if (mjpegUri.equals(requestUrl)) {
+                                if (mjpegUri.endsWith(requestUrl)) {
                                     if (msg instanceof HttpMessage) {
                                         // very start of stream only
                                         mjpegContentType = contentType;
@@ -265,7 +265,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     }
                 }
                 if (msg instanceof HttpContent content) {
-                    if (mjpegUri.equals(requestUrl) && !(content instanceof LastHttpContent)) {
+                    if (mjpegUri.endsWith(requestUrl) && !(content instanceof LastHttpContent)) {
                         // multiple MJPEG stream packets come back as this.
                         byte[] chunkedFrame = new byte[content.content().readableBytes()];
                         content.content().getBytes(content.content().readerIndex(), chunkedFrame);
@@ -356,8 +356,8 @@ public class IpCameraHandler extends BaseThingHandler {
                 logger.debug("Camera sent {} bytes when the content-length header was {}.", bytesAlreadyRecieved,
                         bytesToRecieve);
             } else {
-                logger.warn("!!!! Camera possibly closed the channel on the binding, cause reported is: {}",
-                        cause.getMessage());
+                logger.warn("Camera possibly closed the channel on the binding for URL: {}, cause reported is: {}",
+                        requestUrl, cause.getMessage());
             }
             ctx.close();
         }
@@ -385,7 +385,7 @@ public class IpCameraHandler extends BaseThingHandler {
                             return; // don't auto close this as it is for the alarms.
                         }
                     }
-                    logger.debug("Closing an idle channel for camera: {}", cameraConfig.getIp());
+                    logger.debug("Closing an idle channel for {}{}", cameraConfig.getIp(), requestUrl);
                     ctx.close();
                 }
             }
@@ -711,7 +711,7 @@ public class IpCameraHandler extends BaseThingHandler {
     }
 
     public void openCamerasStream() {
-        if (mjpegUri.isEmpty() || "ffmpeg".equals(mjpegUri)) {
+        if (usingRtspForMjpeg()) {
             setupFfmpegFormat(FFmpegFormat.MJPEG);
             return;
         }
@@ -810,7 +810,7 @@ public class IpCameraHandler extends BaseThingHandler {
             logger.warn("The camera tried to use a FFmpeg feature when the location for FFmpeg is not known.");
             return;
         }
-        if (rtspUri.toLowerCase().contains("rtsp")) {
+        if (mjpegUri.toLowerCase().startsWith("rtsp://") || rtspUri.toLowerCase().startsWith("rtsp://")) {
             if (inputOptions.isEmpty()) {
                 inputOptions = "-rtsp_transport tcp";
             }
@@ -937,10 +937,17 @@ public class IpCameraHandler extends BaseThingHandler {
                     } else {
                         inputOptions += " -hide_banner";
                     }
-                    ffmpegMjpeg = new Ffmpeg(this, format, cameraConfig.getFfmpegLocation(), inputOptions, rtspUri,
-                            cameraConfig.getMjpegOptions(), "http://127.0.0.1:" + SERVLET_PORT + "/ipcamera/"
-                                    + getThing().getUID().getId() + "/ipcamera.jpg",
-                            cameraConfig.getUser(), cameraConfig.getPassword());
+                    if (mjpegUri.toLowerCase().startsWith("rtsp://")) {
+                        ffmpegMjpeg = new Ffmpeg(this, format, cameraConfig.getFfmpegLocation(), inputOptions, mjpegUri,
+                                cameraConfig.getMjpegOptions(), "http://127.0.0.1:" + SERVLET_PORT + "/ipcamera/"
+                                        + getThing().getUID().getId() + "/ipcamera.jpg",
+                                cameraConfig.getUser(), cameraConfig.getPassword());
+                    } else {
+                        ffmpegMjpeg = new Ffmpeg(this, format, cameraConfig.getFfmpegLocation(), inputOptions, rtspUri,
+                                cameraConfig.getMjpegOptions(), "http://127.0.0.1:" + SERVLET_PORT + "/ipcamera/"
+                                        + getThing().getUID().getId() + "/ipcamera.jpg",
+                                cameraConfig.getUser(), cameraConfig.getPassword());
+                    }
                 }
                 Ffmpeg localMjpeg = ffmpegMjpeg;
                 if (localMjpeg != null) {
@@ -1385,6 +1392,16 @@ public class IpCameraHandler extends BaseThingHandler {
                 handle.cameraOnline(getThing().getUID().getId());
             }
         }
+        if (thing.getThingTypeUID().getId().equals(REOLINK_THING) && cameraConfig.useToken
+                && authenticationJob == null) {
+            logger.debug("Token thread for REOLINK was stopped, restarting it now.");
+            authenticationJob = threadPool.scheduleWithFixedDelay(this::getReolinkToken, 0, 45, TimeUnit.MINUTES);
+        }
+        // Ask camera and update openHAB controls to match cameras settings
+        List<org.openhab.core.thing.Channel> channels = thing.getChannels();
+        for (org.openhab.core.thing.Channel channel : channels) {
+            this.handleCommand(channel.getUID(), RefreshType.REFRESH);
+        }
     }
 
     void snapshotIsFfmpeg() {
@@ -1556,19 +1573,13 @@ public class IpCameraHandler extends BaseThingHandler {
         // what needs to be done every poll//
         switch (thing.getThingTypeUID().getId()) {
             case GENERIC_THING:
-                if (!snapshotPolling) {
-                    checkCameraConnection();
-                }
+                checkCameraConnection();
                 break;
             case ONVIF_THING:
-                if (!snapshotPolling) {
-                    checkCameraConnection();
-                }
+                onvifCamera.checkAndRenewEventSubscription();
                 break;
             case INSTAR_THING:
-                if (!snapshotPolling) {
-                    checkCameraConnection();
-                }
+                checkCameraConnection();
                 noMotionDetected(CHANNEL_MOTION_ALARM);
                 noMotionDetected(CHANNEL_PIR_ALARM);
                 noMotionDetected(CHANNEL_HUMAN_ALARM);
@@ -1588,19 +1599,14 @@ public class IpCameraHandler extends BaseThingHandler {
                 sendHttpGET("/cgi-bin/eventManager.cgi?action=getEventIndexes&code=AudioMutation");
                 break;
             case REOLINK_THING:
-                if (cameraConfig.getNvrChannel() > 0) {
-                    sendHttpGET("/api.cgi?cmd=GetAiState&channel=" + cameraConfig.getNvrChannel() + "&user="
-                            + cameraConfig.getUser() + "&password=" + cameraConfig.getPassword());
-                    sendHttpGET("/api.cgi?cmd=GetMdState&channel=" + cameraConfig.getNvrChannel() + "&user="
-                            + cameraConfig.getUser() + "&password=" + cameraConfig.getPassword());
-                } else if (!snapshotPolling) {
-                    checkCameraConnection();
+                if (cameraConfig.getOnvifPort() == 0) {
+                    sendHttpGET("/api.cgi?cmd=GetAiState&channel=" + cameraConfig.getNvrChannel() + reolinkAuth);
+                    sendHttpGET("/api.cgi?cmd=GetMdState&channel=" + cameraConfig.getNvrChannel() + reolinkAuth);
+                } else {
+                    onvifCamera.checkAndRenewEventSubscription();
                 }
                 break;
             case DAHUA_THING:
-                if (!snapshotPolling) {
-                    checkCameraConnection();
-                }
                 // Check for alarms, channel for NVRs appears not to work at filtering.
                 if (streamIsStopped("/cgi-bin/eventManager.cgi?action=attach&codes=[All]")) {
                     logger.info("The alarm stream was not running for camera {}, re-starting it now",
@@ -1609,9 +1615,6 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 break;
             case DOORBIRD_THING:
-                if (!snapshotPolling) {
-                    checkCameraConnection();
-                }
                 // Check for alarms, channel for NVRs appears not to work at filtering.
                 if (streamIsStopped("/bha-api/monitor.cgi?ring=doorbell,motionsensor")) {
                     logger.info("The alarm stream was not running for camera {}, re-starting it now",
@@ -1652,7 +1655,10 @@ public class IpCameraHandler extends BaseThingHandler {
         threadPool = Executors.newScheduledThreadPool(2);
         mainEventLoopGroup = new NioEventLoopGroup(3);
         snapshotUri = getCorrectUrlFormat(cameraConfig.getSnapshotUrl());
-        mjpegUri = getCorrectUrlFormat(cameraConfig.getMjpegUrl());
+        mjpegUri = cameraConfig.getMjpegUrl();
+        if (!mjpegUri.toLowerCase().startsWith("rtsp://")) {
+            mjpegUri = getCorrectUrlFormat(mjpegUri);
+        }
         rtspUri = cameraConfig.getFfmpegInput();
         if (cameraConfig.getFfmpegOutput().isEmpty()) {
             cameraConfig
@@ -1733,20 +1739,22 @@ public class IpCameraHandler extends BaseThingHandler {
                             "[{ \"cmd\":\"GetAbility\", \"param\":{ \"User\":{ \"userName\":\"admin\" }}}]");
                 }
                 if (snapshotUri.isEmpty()) {
-                    if (cameraConfig.getNvrChannel() < 1) {
-                        snapshotUri = "/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=openHAB" + reolinkAuth;
-                    } else {
-                        snapshotUri = "/cgi-bin/api.cgi?cmd=Snap&channel=" + (cameraConfig.getNvrChannel() - 1)
-                                + "&rs=openHAB" + reolinkAuth;
-                    }
+                    // ReolinkHandler will change the snapshotUri in the response to /api.cgi?cmd=Login
+                    snapshotUri = "/cgi-bin/api.cgi?cmd=Snap&channel=" + cameraConfig.getNvrChannel() + "&rs=openHAB"
+                            + reolinkAuth;
                 }
+                // channel numbers for snapshots start at 0, while the rtsp start at 1
                 if (rtspUri.isEmpty()) {
-                    if (cameraConfig.getNvrChannel() < 1) {
-                        rtspUri = "rtsp://" + cameraConfig.getIp() + ":554/h264Preview_01_main";
-                    } else {
-                        rtspUri = "rtsp://" + cameraConfig.getIp() + ":554/h264Preview_0" + cameraConfig.getNvrChannel()
-                                + "_main";
-                    }
+                    rtspUri = "rtsp://" + cameraConfig.getIp() + ":554/h264Preview_0"
+                            + (cameraConfig.getNvrChannel() + 1) + "_main";
+                }
+                if (mjpegUri.isEmpty()) {
+                    mjpegUri = "rtsp://" + cameraConfig.getIp() + ":554/h264Preview_0"
+                            + (cameraConfig.getNvrChannel() + 1) + "_sub";
+                }
+                if (cameraConfig.getAlarmInputUrl().isEmpty()) {
+                    cameraConfig.setAlarmInputUrl("rtsp://" + cameraConfig.getIp() + ":554/h264Preview_0"
+                            + (cameraConfig.getNvrChannel() + 1) + "_sub");
                 }
                 break;
         }
@@ -1777,7 +1785,7 @@ public class IpCameraHandler extends BaseThingHandler {
             case ONVIF_THING:
                 return true;
             case REOLINK_THING:
-                if (cameraConfig.getNvrChannel() < 1) {
+                if (cameraConfig.getOnvifPort() > 0) {
                     return true;
                 }
         }
@@ -1787,7 +1795,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private void keepMjpegRunning() {
         CameraServlet localServlet = servlet;
         if (localServlet != null && !localServlet.openStreams.isEmpty()) {
-            if (!mjpegUri.isEmpty() && !"ffmpeg".equals(mjpegUri)) {
+            if (!usingRtspForMjpeg()) {
                 localServlet.openStreams.queueFrame(("--" + localServlet.openStreams.boundary + "\r\n\r\n").getBytes());
             }
             localServlet.openStreams.queueFrame(getSnapshot());
@@ -1883,6 +1891,10 @@ public class IpCameraHandler extends BaseThingHandler {
 
     public String getWhiteList() {
         return cameraConfig.getIpWhitelist();
+    }
+
+    public boolean usingRtspForMjpeg() {
+        return (mjpegUri.isEmpty() || "ffmpeg".equals(mjpegUri) || mjpegUri.toLowerCase().startsWith("rtsp://"));
     }
 
     @Override

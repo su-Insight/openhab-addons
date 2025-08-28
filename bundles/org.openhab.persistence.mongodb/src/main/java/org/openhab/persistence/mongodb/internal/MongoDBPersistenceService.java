@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,7 +12,6 @@
  */
 package org.openhab.persistence.mongodb.internal;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +41,7 @@ import org.openhab.core.persistence.strategy.PersistenceStrategy;
 import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -65,7 +65,8 @@ import com.mongodb.client.result.DeleteResult;
  */
 @NonNullByDefault
 @Component(service = { PersistenceService.class, QueryablePersistenceService.class,
-        ModifiablePersistenceService.class }, configurationPid = "org.openhab.mongodb", configurationPolicy = ConfigurationPolicy.REQUIRE)
+        ModifiablePersistenceService.class }, configurationPid = "org.openhab.mongodb", configurationPolicy = ConfigurationPolicy.REQUIRE, property = Constants.SERVICE_PID
+                + "=org.openhab.mongodb")
 public class MongoDBPersistenceService implements ModifiablePersistenceService {
 
     private final Logger logger = LoggerFactory.getLogger(MongoDBPersistenceService.class);
@@ -285,8 +286,7 @@ public class MongoDBPersistenceService implements ModifiablePersistenceService {
 
                 final State state = MongoDBTypeConversions.getStateFromDocument(item, obj);
 
-                items.add(new MongoDBItem(realItemName, state, ZonedDateTime
-                        .ofInstant(obj.getDate(MongoDBFields.FIELD_TIMESTAMP).toInstant(), ZoneId.systemDefault())));
+                items.add(new MongoDBItem(realItemName, state, obj.getDate(MongoDBFields.FIELD_TIMESTAMP).toInstant()));
             }
         } finally {
             if (cursor != null) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -48,9 +48,10 @@ public class JythonScriptFileWatcher extends AbstractScriptFileWatcher {
 
     @Override
     protected Optional<String> getScriptType(Path scriptFilePath) {
-        String scriptType = super.getScriptType(scriptFilePath).orElse(null);
-        if (!scriptFilePath.startsWith(getWatchPath().resolve("lib")) && ("py".equals(scriptType))) {
-            return Optional.of(scriptType);
+        Optional<String> scriptType = super.getScriptType(scriptFilePath);
+        if (scriptType.isPresent() && !scriptFilePath.startsWith(getWatchPath().resolve("lib"))
+                && ("py".equals(scriptType.get()))) {
+            return scriptType;
         }
         return Optional.empty();
     }
