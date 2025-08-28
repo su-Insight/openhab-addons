@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.shelly.internal.api1.Shelly1ApiJsonDTO.ShellyStatusSensor.ShellyMotionSettings;
+import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2APClientList;
 import org.openhab.core.thing.CommonTriggerEvents;
 
 import com.google.gson.annotations.SerializedName;
@@ -594,6 +595,7 @@ public class Shelly1ApiJsonDTO {
         public Boolean wifiRecoveryReboot; // FW 1.10+
         @SerializedName("ap_roaming")
         public ShellyApRoaming apRoaming; // FW 1.10+
+        public Boolean rangeExtender; // Gen2: Range extender
 
         public ShellySettingsMqtt mqtt = new ShellySettingsMqtt();
         public ShellySettingsSntp sntp = new ShellySettingsSntp();
@@ -742,6 +744,7 @@ public class Shelly1ApiJsonDTO {
                                                                                     // /settings/sta for details
         public ShellyStatusCloud cloud = new ShellyStatusCloud();
         public ShellyStatusMqtt mqtt = new ShellyStatusMqtt();
+        public Shelly2APClientList rangeExtender;
 
         public String time;
         public Integer serial = -1;
@@ -769,6 +772,7 @@ public class Shelly1ApiJsonDTO {
 
         public Double totalCurrent;
         public Double totalPower;
+        public Double totalKWH;
         public Double totalReturned;
 
         @SerializedName("ext_temperature")
