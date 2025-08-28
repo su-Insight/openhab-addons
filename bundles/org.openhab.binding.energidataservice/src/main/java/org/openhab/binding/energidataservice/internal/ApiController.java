@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -86,12 +87,12 @@ public class ApiController {
             .create();
     private final HttpClient httpClient;
     private final TimeZoneProvider timeZoneProvider;
-    private final String userAgent;
+    private final Supplier<String> userAgentSupplier;
 
     public ApiController(HttpClient httpClient, TimeZoneProvider timeZoneProvider) {
         this.httpClient = httpClient;
         this.timeZoneProvider = timeZoneProvider;
-        userAgent = "openHAB/" + FrameworkUtil.getBundle(this.getClass()).getVersion().toString();
+        this.userAgentSupplier = this::getUserAgent;
     }
 
     /**
@@ -106,7 +107,7 @@ public class ApiController {
      * @throws DataServiceException
      */
     public ElspotpriceRecord[] getSpotPrices(String priceArea, Currency currency, DateQueryParameter start,
-            Map<String, String> properties) throws InterruptedException, DataServiceException {
+            DateQueryParameter end, Map<String, String> properties) throws InterruptedException, DataServiceException {
         if (!SUPPORTED_CURRENCIES.contains(currency)) {
             throw new IllegalArgumentException("Invalid currency " + currency.getCurrencyCode());
         }
@@ -116,18 +117,18 @@ public class ApiController {
                 .param("start", start.toString()) //
                 .param("filter", "{\"" + FILTER_KEY_PRICE_AREA + "\":\"" + priceArea + "\"}") //
                 .param("columns", "HourUTC,SpotPrice" + currency) //
-                .agent(userAgent) //
+                .agent(userAgentSupplier.get()) //
                 .method(HttpMethod.GET);
+
+        if (!end.isEmpty()) {
+            request = request.param("end", end.toString());
+        }
 
         try {
             String responseContent = sendRequest(request, properties);
             ElspotpriceRecords records = gson.fromJson(responseContent, ElspotpriceRecords.class);
-            if (records == null) {
+            if (records == null || Objects.isNull(records.records())) {
                 throw new DataServiceException("Error parsing response");
-            }
-
-            if (records.total() == 0 || Objects.isNull(records.records()) || records.records().length == 0) {
-                throw new DataServiceException("No records");
             }
 
             return Arrays.stream(records.records()).filter(Objects::nonNull).toArray(ElspotpriceRecord[]::new);
@@ -136,6 +137,10 @@ public class ApiController {
         } catch (TimeoutException | ExecutionException e) {
             throw new DataServiceException(e);
         }
+    }
+
+    private String getUserAgent() {
+        return "openHAB/" + FrameworkUtil.getBundle(this.getClass()).getVersion().toString();
     }
 
     private String sendRequest(Request request, Map<String, String> properties)
@@ -210,12 +215,17 @@ public class ApiController {
                 .timeout(REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS) //
                 .param("filter", mapToFilter(filterMap)) //
                 .param("columns", columns) //
-                .agent(userAgent) //
+                .agent(userAgentSupplier.get()) //
                 .method(HttpMethod.GET);
 
-        DateQueryParameter dateQueryParameter = tariffFilter.getDateQueryParameter();
-        if (!dateQueryParameter.isEmpty()) {
-            request = request.param("start", dateQueryParameter.toString());
+        DateQueryParameter start = tariffFilter.getStart();
+        if (!start.isEmpty()) {
+            request = request.param("start", start.toString());
+        }
+
+        DateQueryParameter end = tariffFilter.getEnd();
+        if (!end.isEmpty()) {
+            request = request.param("end", end.toString());
         }
 
         try {
@@ -263,13 +273,16 @@ public class ApiController {
         if (dataset != Dataset.CO2Emission && dataset != Dataset.CO2EmissionPrognosis) {
             throw new IllegalArgumentException("Invalid dataset " + dataset + " for getting CO2 emissions");
         }
+        if (!"DK1".equals(priceArea) && !"DK2".equals(priceArea)) {
+            throw new IllegalArgumentException("Invalid price area " + priceArea + " for getting CO2 emissions");
+        }
         Request request = httpClient.newRequest(ENDPOINT + DATASET_PATH + dataset)
                 .timeout(REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS) //
                 .param("start", start.toString()) //
                 .param("filter", "{\"" + FILTER_KEY_PRICE_AREA + "\":\"" + priceArea + "\"}") //
                 .param("columns", "Minutes5UTC,CO2Emission") //
                 .param("sort", "Minutes5UTC DESC") //
-                .agent(userAgent) //
+                .agent(userAgentSupplier.get()) //
                 .method(HttpMethod.GET);
 
         try {
