@@ -95,7 +95,7 @@ jobs:
 
       - name: Report SAT Errors as Annotations
         if: ${{ matrix.java == '17' && always() && ((steps.build.outcome == 'success') || (steps.build.outcome == 'failure')) }}
-        uses: ghys/checkstyle-github-action@main
+        uses: ghys/checkstyle-github-action@f53240bddce72aacfc835824c8e8c866e7cc854c
         with:
           title: CheckStyle Violations
           path: '**/checkstyle-result.xml'
