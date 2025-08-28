@@ -10,23 +10,22 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.netatmo.internal.api.dto;
+package org.openhab.binding.freeathomesystem.internal.configuration;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * The {@link Snapshot} holds data related to a snapshot.
+ * The {@link FreeAtHomeBridgeHandlerConfiguration} class contains fields mapping thing configuration parameters.
  *
- * @author Gaël L'hopital - Initial contribution
- *
+ * @author Andras Uhrin - Initial contribution
  */
-
 @NonNullByDefault
-public class Snapshot {
-    private @Nullable String url;
+public class FreeAtHomeBridgeHandlerConfiguration {
 
-    public @Nullable String getUrl() {
-        return url;
-    }
+    /**
+     * Bridgeconfiguration parameter.
+     */
+    public String ipAddress = "";
+    public String username = "";
+    public String password = "";
 }
