@@ -77,6 +77,7 @@ public class ShellyBindingConstants {
             THING_TYPE_SHELLYPLUSI4DC, //
             THING_TYPE_SHELLYPLUSDIMMER10V, //
             THING_TYPE_SHELLYPLUSHT, //
+            THING_TYPE_SHELLYPLUSHTG3, //
             THING_TYPE_SHELLYPLUSSMOKE, //
             THING_TYPE_SHELLYPLUSPLUGS, //
             THING_TYPE_SHELLYPLUSPLUGUS, //
@@ -86,9 +87,9 @@ public class ShellyBindingConstants {
             THING_TYPE_SHELLYPLUSWALLDISPLAY, //
 
             // Shelly Plus Mini
-            THING_TYPE_SHELLYMINI1, //
-            THING_TYPE_SHELLYMINIPM, //
-            THING_TYPE_SHELLYMINI1PM, //
+            THING_TYPE_SHELLY1MINI, //
+            THING_TYPE_SHELLYPMMINI, //
+            THING_TYPE_SHELLY1PMMINI, //
 
             // Shelly Pro
             THING_TYPE_SHELLYPRO1, //
@@ -270,6 +271,7 @@ public class ShellyBindingConstants {
     public static final String CHANNEL_DEVST_ACCUWATTS = "accumulatedWatts";
     public static final String CHANNEL_DEVST_ACCUTOTAL = "accumulatedWTotal";
     public static final String CHANNEL_DEVST_ACCURETURNED = "accumulatedReturned";
+    public static final String CHANNEL_DEVST_TOTALKWH = "totalKWH";
     public static final String CHANNEL_DEVST_RESETTOTAL = CHANNEL_EMETER_RESETTOTAL;
 
     public static final String CHANNEL_DEVST_CHARGER = "charger";
