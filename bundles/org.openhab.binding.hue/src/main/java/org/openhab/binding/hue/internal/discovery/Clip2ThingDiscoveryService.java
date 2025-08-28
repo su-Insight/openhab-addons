@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -121,7 +121,6 @@ public class Clip2ThingDiscoveryService extends AbstractThingHandlerDiscoverySer
                         if (legacyThingOptional.isPresent()) {
                             Thing legacyThing = legacyThingOptional.get();
                             legacyThingUID = legacyThing.getUID().getAsString();
-                            thingId = legacyThing.getUID().getId();
                             String legacyLabel = legacyThing.getLabel();
                             thingLabel = Objects.nonNull(legacyLabel) ? legacyLabel : thingLabel;
                         }
